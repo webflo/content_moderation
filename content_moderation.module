@@ -217,7 +217,7 @@ function content_moderation_nodeapi(&$node, $op, $a3, $a4) {
         // If this node has no live version yet, notice the user that the content is not valid.
         // Valid reasons are, that the node has been just created and not approved or, that all live
         // revisions have been revoked
-        drupal_set_message ( t('The content of this document has not been approved and is therefor not valid yet!'), 'warning' );
+        drupal_set_message ( t('The content of this document has not been approved and therefore is not valid yet!'), 'warning' );
       }
 
       // If we are showing a revision, show the author informations
