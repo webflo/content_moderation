@@ -758,3 +758,12 @@ function _content_moderation_latest_live_in_history($nid) {
   // else
   return false;
 }
+
+function _content_moderation_latest_entry_in_history($vid,$state = 'live' ) {
+  $result = _content_moderation_get_history(array('name' => 'vid','value' => $vid), $state);
+  if(is_array($result) && count($result) > 0) {
+    return $result[0];
+  }
+  // else
+  return false;
+}
