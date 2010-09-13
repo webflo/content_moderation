@@ -107,6 +107,14 @@ function content_moderation_update_6003() {
   return $ret;
 }
 
+function content_moderation_update_6004() {
+  $ret = array();
+  $sql = "UPDATE {blocks} SET cache = %d WHERE module='content_moderation'";
+  $result = db_query($sql, BLOCK_NO_CACHE);
+  $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
+  return $ret;
+}
+
 /**
  * Implementation of hook_uninstall().
  */
