@@ -325,18 +325,6 @@ function content_moderation_perm() {
 }
 
 /*
- * Call this method in the form_submit or presave methods to let the updated node
- * be the new live version.
- */
-function content_moderation_reset_live_status($nid = NULL) {
-  if ($nid == NULL || !is_numeric($nid)) {
-    return;
-  }
-
-  db_query('DELETE from {content_moderation} WHERE nid = %d', $nid);
-}
-
-/*
  * Implementation of hook_form_alter
  */
 function content_moderation_form_node_type_form_alter(&$form, $form_state) {
