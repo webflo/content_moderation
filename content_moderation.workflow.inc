@@ -221,13 +221,14 @@ function _content_moderation_next_states($curstate, $node_type = 'all', $user = 
  * Get all states possible
  */
 function _content_moderation_states() {
-  $result = db_query('select * from {content_moderation_states}');
-  //TODO: cache this
+ /* $result = db_query("SELECT * FROM {content_moderation_states}");
+  // TODO: cache this
   $states = array();
   while ($state = db_fetch_object($result)) {
     $states[] = $state->name;
   }
   return $states;
+  */
 }
 
 /*
