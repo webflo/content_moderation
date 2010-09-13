@@ -411,8 +411,8 @@ function content_moderation_views_api() {
 }
 
 /*
- * This is out small helper to ensure, that always the newes vid gets edited.
- * The normal node API would edit the vid which is currently in {node},
+ * This is our small helper to ensure, that always the newes vid gets edited.
+ * The normal node API would edit the vid which is currently in {node} table,
  * But we want to edit the VID which is the most recent one.
  */
 function _content_moderation_node_edit_page($node) {
@@ -656,7 +656,7 @@ function _content_moderation_get_current_viewed_node() {
 }
 
 /*
- * Small helper for trigger and events
+ * Small helper for trigger and rules
  */
 function _content_moderation_node_transition_matrix() {
   static $node_state_matrix = array();
@@ -722,7 +722,7 @@ function _content_moderation_has_moderated_revisions($nid) {
 }
 
 /*
- * Helper to ensure, that Create new revision is always checked, when a node type is selected to be moderated
+ * Helper to ensure, that 'Create new revision is always checked', when a node type is selected to be moderated
  */
 function _content_moderation_validate_node_type_form($from,&$form_state) {
   if($form_state['values']['node_options']['node_content_moderation'] === 'node_content_moderation' && $form_state['values']['node_options']['revision'] === 0) {
