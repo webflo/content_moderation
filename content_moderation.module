@@ -74,6 +74,9 @@ function content_moderation_block($op = "list", $delta = 0, $edit = array()){
       $blocks[0]['info'] = t('Content moderation info');
       return $blocks;
     break;
+    case'cache':
+      return BLOCK_NO_CACHE;
+    break;
     case 'view':
       switch($delta) {
         case 0:
