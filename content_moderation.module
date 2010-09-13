@@ -258,7 +258,12 @@ function content_moderation_nodeapi(&$node, $op, $a3, $a4) {
 
 function content_moderation_yaml_theme_layout($layout, $available) {
   global $theme;
-  $node = _impressive_media_get_cur_node();
+  if(module_exists('impressive_media')) {
+    $node = _impressive_media_get_cur_node();
+  }
+  else {
+    $node = node_load(arg(1));
+  }
 
   if (!_content_moderation_moderate_node_type($node->type)) {
     return;
