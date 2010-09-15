@@ -180,8 +180,11 @@ function content_moderation_node_update($node) {
  */
 function content_moderation_node_load($nodes, $form) {
   foreach($nodes as $node) {
-    // Load node history
-    content_moderation_node_history($node);
+    // Check to see if this node type is moderated to reduce overhead
+    if (content_moderation_node_type_moderated($node->type)) {
+      // Load node history
+      content_moderation_node_history($node);
+    }
   }
 }
 
