@@ -131,7 +131,6 @@ function _content_moderation_update_revision_state($vid,$nid,$state) {
  */
 function _content_moderation_set_live($vid,$nid) {
   $revision = _content_moderation_revision_infos($vid);
-  dsm($revision);
   // Save the vid in the node table and update the title.
   db_query("UPDATE {node} SET vid = %d, status = 1, changed='%s', title='%s' WHERE nid = %d", $vid, $revision->timestamp, $revision->title, $nid);
   if(module_exists('pathauto'))  {
