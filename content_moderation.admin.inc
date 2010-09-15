@@ -25,6 +25,5 @@ function content_moderation_admin_settings() {
 		'#description' => t('The intended default value is checked (feature by design).<br/>However, it is then impossible to first create a (unpublished) draft. By unchecking this feature content types\' publishing options may be set to "unpublished". When a draft goes "live" (transition into moderation state "live") for the first time the node will be published automatically. After that only users with the right "administer nodes" are able to unpublish it again (making it a draft).<br/>'),
 		'#default_value' => variable_get('content_moderation_force_publish', 1),
   );
-
 	return system_settings_form($form);
 }
