@@ -486,7 +486,7 @@ function _content_moderation_revision_infos($vid) {
  * Calculated the most recent vid of the current node
  */
 function _content_moderation_latest_revision($nid) {
-  return db_query('SELECT MAX(vid) FROM {node_revisions} WHERE nid=%d', $nid)->fetchField();
+  return db_query('SELECT MAX(vid) FROM {node_revision} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
 }
 
 /*
@@ -505,7 +505,9 @@ function _content_moderation_history($node) {
  */
 function _content_moderation_live_revision($nid) {
   $live_state = _content_moderation_live_state();
-  $vid = db_query("SELECT vid from {content_moderation_node_history} WHERE nid=%d AND state_name='%s' order by hid DESC limit 1", $nid, $live_state)->fetchField();
+  $vid = db_query("SELECT vid FROM {content_moderation_node_history} WHERE nid = :nid AND state_name = :state ORDER BY hid DESC LIMIT 1", array(
+      ':nid' => $nid, ':state' => $live_state))
+    ->fetchField();
   if ($vid == false) {
     return NULL;
   }
@@ -624,10 +626,11 @@ function _content_moderation_access($op, $node) {
  */
 function _content_moderation_get_latest_revisions($nid, $limit = 5, $vid = NULL, $exclude = array()) {
   if ($vid == NULL) {
-    $live = _content_moderation_live_revision($nid);
+    if (! $live = _content_moderation_live_revision($nid)) {
+      return FALSE;
+    }
     $vid = $live->vid;
   }
-
 
   if ($limit != 0) {
     $limit = " limit $limit";
@@ -652,14 +655,27 @@ function _content_moderation_get_latest_revisions($nid, $limit = 5, $vid = NULL,
   // if vid is still null, we actually dont have a live revision. So we need to count all revisions, even that one
   // which is currently references in the node table.
   if ($vid == NULL) {
-    $result = db_query("select nr.*,cmrs.state from {node_revisions} as nr LEFT JOIN {content_moderation_revision_state} as cmrs on nr.vid=cmrs.vid where nr.nid=%d {$filter} order by nr.vid DESC $limit", $nid);
+    $results = db_query("SELECT nr.*, cmrs.state
+      FROM {node_revision} AS nr
+      LEFT JOIN {content_moderation_revision_state} AS cmrs
+        ON nr.vid = cmrs.vid
+      WHERE nr.nid = :nid {$filter}
+      ORDER BY nr.vid DESC $limit", array(':nid' => $nid));
   }
   else {
-    $result = db_query("select nr.*,cmrs.state from {node_revisions} as nr LEFT JOIN {content_moderation_revision_state} as cmrs on nr.vid=cmrs.vid where nr.nid=%d AND nr.vid>%d {$filter} order by nr.vid DESC $limit", $nid, $vid);
+    $results = db_query("SELECT nr.*, cmrs.state
+      FROM {node_revision} AS nr
+      LEFT JOIN {content_moderation_revision_state} AS cmrs
+      ON nr.vid = cmrs.vid
+      WHERE nr.nid = :nid
+        AND nr.vid > :vid {$filter}
+      ORDER BY nr.vid
+      DESC $limit", array(':nid' => $nid, ':vid' => $vid)
+    );
   }
 
   $revs = array();
-  while ($rev = db_fetch_object($result)) {
+  foreach ($results as $rev) {
     $revs[] = $rev;
   }
 
@@ -725,7 +741,7 @@ function _content_moderation_is_not_approved_live($vid) {
 }
 
 function _content_moderation_get_current_title($nid) {
-  return db_query('SELECT title from {node} where nid=%d', $nid)->fetchField();
+  return db_query('SELECT title FROM {node} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
 }
 
 function _content_moderation_show_latest_revision($node) {
@@ -736,17 +752,23 @@ function _content_moderation_show_latest_revision($node) {
 }
 
 function _content_moderation_has_moderated_revisions($nid) {
-  $none_state = _content_moderation_none_state();
-  $live_state = _content_moderation_live_state();
   // Get all revisions which are neither in the none nor in the live state
-  $result = db_query("select nr.*,cmrs.state from {node_revisions} as nr LEFT JOIN {content_moderation_revision_state} as cmrs on nr.vid=cmrs.vid where nr.nid=%d AND cmrs.state!='%s' AND cmrs.state!='%s'", $nid, $none_state, $live_state);
-
-  if ($result === false) {
-    return array();
-  }
+  $results = db_query("SELECT nr.*, cmrs.state
+    FROM {node_revision} AS nr
+    LEFT JOIN {content_moderation_revision_state} AS cmrs
+      ON nr.vid =cmrs.vid
+    WHERE nr.nid = :nid
+      AND cmrs.state <> :none_state
+      AND cmrs.state <> :live_state",
+    array(
+      ':nid' => $nid,
+      ':none_state' => _content_moderation_none_state(),
+      ':live_state' => _content_moderation_live_state()
+    )
+  );
 
   $revs = array();
-  while ($rev = db_fetch_object($result)) {
+  foreach ($results as $rev) {
     $revs[] = $rev;
   }
 
