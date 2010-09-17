@@ -140,7 +140,15 @@ function _content_moderation_update_revision_state($vid, $nid, $state) {
 function _content_moderation_set_live($vid, $nid) {
   $revision = _content_moderation_revision_infos($vid);
   // Save the vid in the node table and update the title.
-  db_query("UPDATE {node} SET vid = %d, status = 1, changed='%s', title='%s' WHERE nid = %d", $vid, $revision->timestamp, $revision->title, $nid);
+  $record = array(
+    'vid' => $vid,
+    'changed' => $revision->timestamp,
+    'status' => 1,
+    'title' => $revision->title,
+    'nid' => $nid
+  );
+  drupal_write_record('nide', $record, 'nid');
+  
   if (module_exists('pathauto')) {
     // recreate node-path_alias
     $node = node_load($nid, NULL, true);
@@ -151,8 +159,13 @@ function _content_moderation_set_live($vid, $nid) {
   // as we can have more then one live revision.
   // We are not resetting the history though, because it should be visible
   // which node has been live, approved by who and so forth.
-  db_query("UPDATE {content_moderation_revision_state} SET state = 'none' WHERE nid = %d AND vid<>%d AND state='live'", $nid, $vid);
-}
+  $update = array(
+    'state' => _content_moderation_none_state(),
+    'nid' => $nid,
+    'vid' => $vid,
+  );
+  drupal_write_record('content_moderation_revision_state', $update, array('nid', 'vid'));
+ }
 
 /*
  * Save an entry in the content moderation history
