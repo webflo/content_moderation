@@ -365,41 +365,40 @@ function content_moderation_form_node_type_form_alter(&$form, $form_state) {
 }
 
 /*
- * Implementation of form_alter.
+ * Implementation of hook_form_alter.
  * Forcing new reversion and publishing.
  */
 function content_moderation_form_alter(&$form, $form_state, $form_id) {
-  if (!_content_moderation_moderate_node_type($form['#node']->type)) {
+  // This must be a node form and a type that has moderation enabled
+  if (! (isset($form['#node_edit_form']) && _content_moderation_moderate_node_type($form['#node']->type))) {
     // Dont moderate this content type.
     return;
   }
 
-  if ($form['#id'] == 'node-form') {
-    // force new revision
-    $form['revision_information']['revision']['#prefix'] = t('As this content is in moderation, you cannot choose here. A new revision is always created.');
-    $form['revision_information']['revision']['#disabled'] = true;
-    $form['revision_information']['revision']['#default_value'] = true;
+  // force new revision
+  $form['revision_information']['revision']['#prefix'] = t('As this content is in moderation, you cannot choose here. A new revision is always created.');
+  $form['revision_information']['revision']['#disabled'] = true;
+  $form['revision_information']['revision']['#default_value'] = true;
 
-    $descr = t('You cant choose here, as this content is under moderation. Publishing is forced.');
-    if (is_array($form['options']['status']) && variable_get('content_moderation_force_publish', 1)) {
-      $form['options']['status']['#disabled'] = true;
-      $form['options']['status']['#default_value'] = true;
-      $form['options']['status']['#prefix'] = $descr;
-      $form['options']['status']['#value'] = true;
-    }
-    if (module_exists('impressive_media_icombined_access')) {
-      $form['custom_options']['status']['#disabled'] = true;
-      $form['custom_options']['status']['#default_value'] = true;
-      $form['custom_options']['status']['#value'] = true;
-      $form['custom_options']['status']['#prefix'] = $descr;
-    }
-    // Add this so we get redirected to the new create revision.
-    // Skip this, if thats a new node, as this will happen automatically then
-    // Skip this also, if the current node has no approved version then, because content_moderation
-    // will behave like the normal node edit workflow then (and not restore the vid)
-    if ($form['nid']['#value'] != NULL && _content_moderation_live_revision($form['nid']['#value']) != NULL) {
-      $form['buttons']['submit']['#submit'][] = '_content_moderation_submit_node_form';
-    }
+  $descr = t('You cant choose here, as this content is under moderation. Publishing is forced.');
+  if (is_array($form['options']['status']) && variable_get('content_moderation_force_publish', 1)) {
+    $form['options']['status']['#disabled'] = true;
+    $form['options']['status']['#default_value'] = true;
+    $form['options']['status']['#prefix'] = $descr;
+    $form['options']['status']['#value'] = true;
+  }
+  if (module_exists('impressive_media_icombined_access')) {
+    $form['custom_options']['status']['#disabled'] = true;
+    $form['custom_options']['status']['#default_value'] = true;
+    $form['custom_options']['status']['#value'] = true;
+    $form['custom_options']['status']['#prefix'] = $descr;
+  }
+  // Add this so we get redirected to the new create revision.
+  // Skip this, if thats a new node, as this will happen automatically then
+  // Skip this also, if the current node has no approved version then, because content_moderation
+  // will behave like the normal node edit workflow then (and not restore the vid)
+  if ($form['nid']['#value'] != NULL && _content_moderation_live_revision($form['nid']['#value']) != NULL) {
+    $form['buttons']['submit']['#submit'][] = '_content_moderation_submit_node_form';
   }
 }
 
