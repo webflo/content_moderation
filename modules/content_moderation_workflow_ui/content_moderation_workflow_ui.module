@@ -161,11 +161,12 @@ function _content_moderation_workflow_ui_admin_transitions() {
 function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state) {
   $form_values = $form_state['values'];
   foreach ( $form_values['delete_states'] as $state => $action ) {
+    // @TODO nodes that are in these moderated states need to be updated
     if ( is_string($action) ) {
-      $q = " DELETE FROM {content_moderation_states} WHERE name = '%s' ";
-      $r = db_query($q, array($state));
-      $q = " DELETE FROM {content_moderation_transition} WHERE from_name = '%s' OR from_name = '%s' ";
-      $r = db_query($q, array($state, $state));
+      // Remove the moderation state
+      db_query("DELETE FROM {content_moderation_states} WHERE name = :name", array(':name' => $state));
+      // Remove this state from transitions
+      db_query("DELETE FROM {content_moderation_transition} WHERE from_name = :name OR to_name = :name", array(':name' => $state));
     }
   }
   if ( isset($form_values['new_state_name']) && strlen($form_values['new_state_name']) > 0 ) {
