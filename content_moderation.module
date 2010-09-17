@@ -149,18 +149,19 @@ function content_moderation_help($path, $arg) {
   }
 }
 
-/*
- * Implementation of hook_nodeapi
- */
+
 /**
  * Implements hook_node_prepare.
  */
 function content_moderation_node_prepare($node) {
-  if (_content_moderation_moderate_node_type($node->type)) {
-    $live =  _content_moderation_live_revision($node->nid);
-    // We only need to change the behavior if the current version is not the latest pending version
-    if ($live != NULL && $node->vid != $live->vid) {
-      drupal_set_message(t('You are now editing the most recent pending revision (@revision) and not the live version!', array('@revision' => $node->vid)), 'warning', false);
+  // Check to see if this is an existing node
+  if (isset($node->nid)) {
+    if (_content_moderation_moderate_node_type($node->type)) {
+      $live =  _content_moderation_live_revision($node->nid);
+      // We only need to change the behavior if the current version is not the latest pending version
+      if ($live != NULL && $node->vid != $live->vid) {
+        drupal_set_message(t('You are now editing the most recent pending revision (@revision) and not the live version!', array('@revision' => $node->vid)), 'warning', false);
+      }
     }
   }
 }
@@ -756,6 +757,7 @@ function _content_moderation_has_moderated_revisions($nid) {
  * Helper to ensure, that 'Create new revision is always checked', when a node type is selected to be moderated
  */
 function _content_moderation_validate_node_type_form($from, &$form_state) {
+  // @TODO maybe just do this by default and notify the admin instead?
   if ($form_state['values']['node_options']['node_content_moderation'] === 'node_content_moderation' && $form_state['values']['node_options']['revision'] === 0) {
     form_set_error('node_options', t('If you chose to moderate this content type, you must switch "Create new revision" in the workflow tab on'));
   }
