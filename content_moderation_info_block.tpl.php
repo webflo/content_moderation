@@ -21,9 +21,14 @@ $edit_state_icon = '<span class="tinyicon t_changestateicon"></span>';
 $delete_icon = '<span class="tinyicon t_deleteicon"></span>';
 $view_icon = '<span class="tinyicon t_viewicon"></span>';
 
+// Prevent php from throwing notices
+$edit_state = '';
+$compare_live = '';
+$delete_current = '';
+
 
 /* actions */
-if(_content_moderation_statechange_allowed($node->vid)) {
+if( _content_moderation_statechange_allowed($node->vid)) {
   $edit_state = l($edit_state_icon,$links['edit_state'],array('html' => true, 'attributes' => array( 'title' => t('Edit the state of this revision.') ) ));
 }
 

@@ -201,13 +201,22 @@ function content_moderation_node_update($node) {
   if ($node->live != NULL) {
     // Reset the title.
     if ($node->new_title !== false) {
-      db_query("UPDATE {node_revision} SET title='%s' WHERE vid=%d", $node->new_title, $node->vid);
+      $data = array(
+        'title' => $node->new_title, 
+        'vid' => $node->vid
+      );
+      drupal_write_record('node_revision', $data, 'vid');
     }
 
     // Reset the revision
     $live_version = _content_moderation_revision_infos($node->live->vid);
-    db_query("UPDATE {node} SET vid = %d, changed='%s', title='%s' WHERE nid = %d", $live_version->vid, $live_version->timestamp, $live_version->title, $node->nid);
-
+    $data = array(
+      'vid' => $live_version->vid, 
+      'changed' => $live_version->timestamp, 
+      'title' => $live_version->title, 
+      'nid' => $node->nid
+    );
+    drupal_write_record('node', $data, 'nid');
     drupal_set_message(t('Your content has been saved as a pending version'));
   }
 }
@@ -519,9 +528,11 @@ function _content_moderation_live_revision($nid) {
       ':state' =>  _content_moderation_live_state()
     )
   )->fetchField();
+
   if (! $vid) {
     return NULL;
   }
+  return node_load($nid, $vid);
 }
 
 /*

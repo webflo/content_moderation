@@ -293,12 +293,15 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
     return false;
   }
 
-  if (variable_get('content_moderation_moderate_latest_only', 1) === 1) {
-    $revisions = _content_moderation_get_latest_revisions($nid, 1);
-    // Do not allow state changing of revisions, which are not the latest
 
-    if (!is_array($revisions) || $revisions[0]->vid != $vid) {
-     // return false;
+  if (variable_get('content_moderation_moderate_latest_only', 1)) {
+    // Are there any revisions for this node?
+    if (! $revisions = _content_moderation_get_latest_revisions($nid, 1)) {
+      return FALSE;
+    }
+    // Do not allow state changing of revisions, which are not the latest
+    if ($revisions[0]->vid != $vid) {
+      return FALSE;
     }
   }
 
