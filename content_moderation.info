@@ -1,6 +1,16 @@
 ; $Id$
 project = "content_moderation"
-core = "6.x"
+core = 7.x
 name = Content Moderation
 description = Content Moderation
 package = "Drupal Wiki"
+files[] = content_moderation.admin.inc
+files[] = content_moderation.install
+files[] = content_moderation.module
+files[] = content_moderation.rules.inc
+files[] = content_moderation.trigger.inc
+files[] = content_moderation.views.inc
+files[] = content_moderation.workflow.inc
+files[] = content_moderation_handler_filter_state.inc
+files[] = content_moderation_info_block.tpl.php
+files[] = content_moderation_revisions_list.tpl.php

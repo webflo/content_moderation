@@ -4,13 +4,14 @@
 // For docs have a look on http://drupal.org/node/375833
 
 /**
- * Implementation of hook_hook_info().
+ * Implements hook_trigger_info().
  * For every node type moderation is activated for and every transition we generate a event
  */
-function content_moderation_hook_info() {
-  $triggers['content_moderation']['content_moderation'] =  array();
+function content_moderation_trigger_info() {
+  // TODO The array elements in this hook function need to be changed.
+    array();
   $matrix = _content_moderation_node_transition_matrix();
-  foreach($matrix as $op => $descr) {
+  foreach ($matrix as $op => $descr) {
     $triggers['content_moderation']['content_moderation'][$op]['runs when'] = $descr;
   }
 
@@ -20,13 +21,13 @@ function content_moderation_hook_info() {
 /*
  * Implementation of hook_trigger_name().
  */
-function content_moderation_content_moderation($op,$user) {
+function content_moderation_content_moderation($op, $user) {
   if (!module_exists("trigger")) {
     return;
   }
 
   $matrix = _content_moderation_node_transition_matrix();
-  if(!in_array($op,array_keys($matrix))) {
+  if (!in_array($op, array_keys($matrix))) {
     return;
   }
 

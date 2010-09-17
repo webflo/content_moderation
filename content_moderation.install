@@ -11,22 +11,23 @@
  */
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function content_moderation_install() {
   // Create tables.
-  drupal_install_schema('content_moderation');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.;
+  // drupal_install_schema('content_moderation');
   _content_moderation_insert_values();
 
   db_query("UPDATE {system} SET weight = 5 WHERE name = 'content_moderation'");
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function content_moderation_schema() {
   $schema['content_moderation_revision_state'] = array(
-    'description' => t('Saves the current live vid of a node'),
+    'description' => 'Saves the current live vid of a node',
     'fields'  => array(
       'vid'   => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'nid'   => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
@@ -36,7 +37,7 @@ function content_moderation_schema() {
   );
 
   $schema['content_moderation_states'] = array(
-    'description' => t('Defines all possible states'),
+    'description' => 'Defines all possible states',
     'fields'    => array(
       'name'    => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
       'descr'   => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
@@ -59,7 +60,7 @@ function content_moderation_schema() {
   );
 
   $schema['content_moderation_transition'] = array(
-    'description' => t('Defines the valid transitions for states'),
+    'description' => 'Defines the valid transitions for states',
     'fields' => array(
       'from_name' => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
       'to_name'   => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
@@ -76,7 +77,7 @@ function _content_moderation_insert_values() {
   $states[] = array('name' => 'review');
   $states[] = array('name' => 'approve');
   $states[] = array('name' => 'live');
-  foreach($states as $state) {
+  foreach ($states as $state) {
     // See http://drupal.org/node/568640 to change this after it's fixed.
     db_query('INSERT INTO {content_moderation_states} (`name`) VALUES("%s")', $state);
     //drupal_write_record('content_moderation_states', $state);
@@ -89,24 +90,36 @@ function _content_moderation_insert_values() {
   $transitions[] = array('review',  'none',     'all');
   $transitions[] = array('approve', 'review',   'all');
   $transitions[] = array('approve', 'none',     'all');
-  foreach($transitions AS $transition) {
+  foreach ($transitions as $transition) {
     // See http://drupal.org/node/568640 to change this after it's fixed.
     db_query('INSERT INTO {content_moderation_transition} (from_name,to_name,ntype) VALUES("' . $transition[0] . '","' . $transition[1] . '","' . $transition[2] . '")');
     //drupal_write_record('content_moderation_transition', $transition);
   }
 }
 
+/**
+ * @todo Please insert a Doxygen style comment for this hook_update_N.
+ *
+ */
 function content_moderation_update_6001() {
   update_sql('UPDATE node INNER JOIN node_revisions nr ON node.vid = nr.vid SET node.changed = nr.timestamp');
   return array();
 }
 
+/**
+ * @todo Please insert a Doxygen style comment for this hook_update_N.
+ *
+ */
 function content_moderation_update_6003() {
   $ret = array();
-  db_add_field($ret, 'content_moderation_states', 'weight', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'small'));
+  db_add_field('content_moderation_states', 'weight', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'small'));
   return $ret;
 }
 
+/**
+ * @todo Please insert a Doxygen style comment for this hook_update_N.
+ *
+ */
 function content_moderation_update_6004() {
   $ret = array();
   $sql = "UPDATE {blocks} SET cache = %d WHERE module='content_moderation'";
@@ -116,9 +129,10 @@ function content_moderation_update_6004() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function content_moderation_uninstall() {
   // Remove tables.
-  drupal_uninstall_schema('content_moderation');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.;
+  // drupal_uninstall_schema('content_moderation');
 }

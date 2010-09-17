@@ -6,14 +6,14 @@
  */
 function content_moderation_workflow_ui_menu() {
   $items = array();
-  $items['admin/settings/content_moderation/states'] = array(
+  $items['admin/config/content_moderation/states'] = array(
     'title' => 'States',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('content_moderation_workflow_ui_admin_settings_states'),
     'access arguments' => array('administer site configuration'),
   );
-  $items['admin/settings/content_moderation/transitions'] = array(
+  $items['admin/config/content_moderation/transitions'] = array(
     'title' => 'Transitions',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
@@ -28,14 +28,14 @@ function content_moderation_workflow_ui_menu() {
  * Form builder function for module settings.
  * Defining states
  */
-function content_moderation_workflow_ui_admin_settings_states() {
+function content_moderation_workflow_ui_admin_settings_states($form, &$form_state) {
 
   $form['content_moderation_states'] = array(
     '#type' => 'fieldset',
     '#title' => t('Content moderation states'),
     '#description' => 'Use to define new states or to delete existing ones. States have to be defined before corresponding transitions can be set up.'
   );
-  $form['content_moderation_states']['new'] = array (
+  $form['content_moderation_states']['new'] = array(
     '#type' => 'fieldset',
     '#title' => 'Create new',
   );
@@ -56,18 +56,18 @@ function content_moderation_workflow_ui_admin_settings_states() {
     '#type' => 'submit',
     '#value' => t('Create')
   );
- $form['content_moderation_states']['del'] = array (
+  $form['content_moderation_states']['del'] = array(
     '#type' => 'fieldset',
     '#title' => 'Delete state',
   );
-  $form['content_moderation_states']['del'] ['delete_states'] = array(
+  $form['content_moderation_states']['del']['delete_states'] = array(
     '#type' => 'checkboxes',
     '#title' => 'Delete existing states',
     '#default_value' => array(),
     '#options' => _content_moderation_workflow_ui_admin_states(),
     '#description' => 'Select all states you want to delete <br> Please note: when deleting an existing state all transitions involving this state will also be deleted.'
   );
-    $form['content_moderation_states']['del']['submit_states'] = array(
+  $form['content_moderation_states']['del']['submit_states'] = array(
     '#type' => 'submit',
     '#value' => t('Delete')
   );
@@ -80,14 +80,14 @@ function content_moderation_workflow_ui_admin_settings_states() {
  * Form builder function for module settings.
  * Defining transitions
  */
-function content_moderation_workflow_ui_admin_settings_transitions() {
+function content_moderation_workflow_ui_admin_settings_transitions($form, &$form_state) {
   $form['content_moderation_transitions'] = array(
     '#type' => 'fieldset',
     '#title' => 'Content moderation transitions',
     '#description' => 'Use to define new transitions or to delete existing ones. Transitions may be set up with existing states only.'
   );
 
-  $form['content_moderation_transitions']['new'] = array (
+  $form['content_moderation_transitions']['new'] = array(
     '#type' => 'fieldset',
     '#title' => 'Create new',
   );
@@ -96,14 +96,14 @@ function content_moderation_workflow_ui_admin_settings_transitions() {
     '#type' => 'select',
     '#title' => 'New transition from',
     '#default_value' => array(),
-    '#options' => array_merge(array(0 => t('Choose a state')),_content_moderation_workflow_ui_admin_states()),
+    '#options' => array_merge(array(0 => t('Choose a state')), _content_moderation_workflow_ui_admin_states()),
   );
 
   $form['content_moderation_transitions']['new']['new_transition_to'] = array(
     '#type' => 'select',
     '#title' => 'to',
     '#default_value' => array(),
-    '#options' => array_merge(array(0 => t('Choose a state')),_content_moderation_workflow_ui_admin_states()),
+    '#options' => array_merge(array(0 => t('Choose a state')), _content_moderation_workflow_ui_admin_states()),
   );
 
   $form['content_moderation_transitions']['new']['submit_transitions'] = array(
@@ -111,7 +111,7 @@ function content_moderation_workflow_ui_admin_settings_transitions() {
     '#value' => t('Create')
   );
 
-    $form['content_moderation_transitions']['del'] = array (
+  $form['content_moderation_transitions']['del'] = array(
     '#type' => 'fieldset',
     '#title' => 'Delete transitions',
   );
@@ -152,16 +152,15 @@ function _content_moderation_workflow_ui_admin_transitions() {
   //TODO: cache this
   $transitions = array();
   while ($transition = db_fetch_object($result)) {
-    $transinfo = $transition->from_name.'---'.$transition->to_name;
+    $transinfo = $transition->from_name . '---' . $transition->to_name;
     $transitions[$transinfo] = $transition->from_name . ' -> ' . $transition->to_name;
   }
   return $transitions;
 }
 
-function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state)
-{
+function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state) {
   $form_values = $form_state['values'];
-  foreach ( $form_values['delete_states'] AS $state => $action ) {
+  foreach ( $form_values['delete_states'] as $state => $action ) {
     if ( is_string($action) ) {
       $q = " DELETE FROM {content_moderation_states} WHERE name = '%s' ";
       $r = db_query($q, array($state));
@@ -180,10 +179,9 @@ function content_moderation_workflow_ui_admin_settings_states_submit($form, &$fo
   drupal_set_message(t('Your settings have been saved.'));
 }
 
-function content_moderation_workflow_ui_admin_settings_transitions_submit($form, &$form_state)
-{
+function content_moderation_workflow_ui_admin_settings_transitions_submit($form, &$form_state) {
   $form_values = $form_state['values'];
-  foreach ( $form_values['delete_transitions'] AS $transition => $action ) {
+  foreach ( $form_values['delete_transitions'] as $transition => $action ) {
     if ( is_string($action) ) {
       $transinfo = explode('---', $transition);
       $q = " DELETE FROM {content_moderation_transition} WHERE from_name = '%s' AND to_name = '%s' ";

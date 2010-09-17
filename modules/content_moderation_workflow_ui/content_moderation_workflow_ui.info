@@ -1,6 +1,7 @@
 ; $Id$
 project = "content_moderation_workflow_ui"
-core = "6.x"
+core = 7.x
 name = Content Moderation Workflow UI
 description = Content Moderation
 package = "Drupal Wiki"
+files[] = content_moderation_workflow_ui.module

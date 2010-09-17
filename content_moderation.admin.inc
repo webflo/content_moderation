@@ -4,8 +4,8 @@
 /**
  * Form builder function for module settings.
  */
-function content_moderation_admin_settings() {
-	$form['content_moderation_pending_count'] = array(
+function content_moderation_admin_settings($form, &$form_state) {
+  $form['content_moderation_pending_count'] = array(
     '#title' => t('Number of pending revisions to be shown in content_moderation block'),
     '#type' => 'textfield',
 		'#size' => 3,
@@ -26,5 +26,5 @@ function content_moderation_admin_settings() {
 		'#default_value' => variable_get('content_moderation_force_publish', 1),
   );
 
-	return system_settings_form($form);
+  return system_settings_form($form);
 }

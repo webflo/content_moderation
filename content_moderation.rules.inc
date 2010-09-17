@@ -8,7 +8,7 @@
 function content_moderation_rules_event_info() {
   $events = array();
   $matrix = _content_moderation_node_transition_matrix();
-  foreach($matrix as $op => $descr) {
+  foreach ($matrix as $op => $descr) {
     $events[$op] = array(
       'label' => $descr,
       'module' => 'Content_moderation',
