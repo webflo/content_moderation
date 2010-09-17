@@ -148,10 +148,10 @@ function _content_moderation_workflow_ui_admin_states() {
  * Get all transitions possible
  */
 function _content_moderation_workflow_ui_admin_transitions() {
-  $result = db_query('select * from {content_moderation_transition}');
+  $results = db_query('SELECT * FROM {content_moderation_transition}');
   //TODO: cache this
   $transitions = array();
-  while ($transition = db_fetch_object($result)) {
+  foreach ($results as $transition) {
     $transinfo = $transition->from_name . '---' . $transition->to_name;
     $transitions[$transinfo] = $transition->from_name . ' -> ' . $transition->to_name;
   }
@@ -185,8 +185,10 @@ function content_moderation_workflow_ui_admin_settings_transitions_submit($form,
   foreach ( $form_values['delete_transitions'] as $transition => $action ) {
     if ( is_string($action) ) {
       $transinfo = explode('---', $transition);
-      $q = " DELETE FROM {content_moderation_transition} WHERE from_name = '%s' AND to_name = '%s' ";
-      $r = db_query($q, array($transinfo[0], $transinfo[1]));
+      db_query("DELETE FROM {content_moderation_transition} WHERE from_name = :from_name AND to_name = :to_name", array(
+        ':from_name' => $transinfo[0],
+        ':to_name' => $transinfo[1],
+      ));
     }
   }
   if ( $form_values['new_transition_from'] != '0' && $form_values['new_transition_to'] != '0' ) {
