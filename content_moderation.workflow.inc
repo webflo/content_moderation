@@ -175,14 +175,29 @@ function _content_moderation_save_history($node, $curstate, $nextstate, $uid, $c
  */
 function _content_moderation_get_history($key, $tostate = NULL) {
   if ($tostate != NULL) {
-    $result = db_query('select * from {content_moderation_node_history} where ' . $key['name'] . '=%d AND state_name="%s" order by stamp DESC', $key['value'], $tostate);
+    $results = db_query("SELECT * FROM {content_moderation_node_history}
+      WHERE :key = :value
+        AND state_name = :state
+      ORDER BY stamp DESC",
+      array(
+        ':key' => $key['name'],
+        ':value' => $key['value'],
+        ':state' => $tostate
+      )
+    );
   }
   else {
-    $result = db_query('select * from {content_moderation_node_history} where ' . $key['name'] . '=%d order by stamp DESC', $key['value']);
+    $results = db_query('SELECT * FROM {content_moderation_node_history}
+      WHERE :key = :value
+      ORDER BY stamp DESC',
+      array(
+        ':key' => $key['name'],
+        ':value' => $key['value']
+      )
+    );
   }
   $history = array();
-
-  while ($entry = db_fetch_object($result)) {
+  foreach ($results as $entry) {
     $history[] = $entry;
   }
 
