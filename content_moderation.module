@@ -90,8 +90,7 @@ function content_moderation_block_view($delta) {
         return;
       }
 
-      $m = drupal_get_path('module', 'content_moderation');
-      drupal_add_css("$m/css/content_moderation_block.css");
+      drupal_add_css(drupal_get_path('module', 'content_moderation') . '/css/content_moderation_block.css');
 
       $pending_revisions = _content_moderation_get_latest_revisions($node->nid, variable_get('content_moderation_pending_count', 5), NULL);
       $revisions_list = theme('content_moderation_revisions_list', array('revisions' => $pending_revisions));
@@ -102,10 +101,10 @@ function content_moderation_block_view($delta) {
         $links['edit_live'] = "node/{$node->nid}/edit";
         $links['compare'] = "node/{$node->nid}/revisions";
         $links['live_view'] = 'node/' . $live->nid;
+        $links['compare_with_live'] = "node/{$node->nid}/revisions/view/{$node->vid}/{$live->vid}";
       }
       $links['edit_state'] = _content_moderation_change_state_link($node->vid, $node->nid);
-      $links['compare_with_live'] = "node/{$node->nid}/revisions/view/{$node->vid}/{$live->vid}";
-
+     
       // Get the state of the currently view revision
       $state = ucfirst(_content_moderation_current_state($node->vid));
 
@@ -116,8 +115,6 @@ function content_moderation_block_view($delta) {
       break;
   }
 }
-
-function content_moderation_block_OLD($op = "list", $delta = 0, $edit = array()) { }
 
 
 /*
@@ -204,7 +201,7 @@ function content_moderation_node_update($node) {
   if ($node->live != NULL) {
     // Reset the title.
     if ($node->new_title !== false) {
-      db_query("UPDATE {node_revisions} SET title='%s' WHERE vid=%d", $node->new_title, $node->vid);
+      db_query("UPDATE {node_revision} SET title='%s' WHERE vid=%d", $node->new_title, $node->vid);
     }
 
     // Reset the revision
@@ -214,6 +211,7 @@ function content_moderation_node_update($node) {
     drupal_set_message(t('Your content has been saved as a pending version'));
   }
 }
+
 
 /**
  * Implements hook_node_view.
@@ -226,6 +224,8 @@ function content_moderation_node_view($node, $view_mode = 'full') {
   }
 
   $live = _content_moderation_live_revision($node->nid);
+
+
   // If we are showing the node, but there is no live version yet, give a hard notice.
   if ($live == NULL && user_access('view content moderation message no live yet')) {
     // If this node has no live version yet, notice the user that the content is not valid.
@@ -270,15 +270,6 @@ function content_moderation_node_delete($node) {
   db_query('DELETE FROM {content_moderation_revision_state} WHERE nid=%d', $node->nid);
 }
 
-function content_moderation_nodeapi_OLD(&$node, $op, $a3, $a4) {
-  // TODO Remaining code in this function needs to be moved to the appropriate new hook function.
-  global $user;
-  $type = $node->type;
-  if (!_content_moderation_moderate_node_type($type)) {
-    // Dont moderate this content type
-    return;
-  }
-}
 
 function content_moderation_yaml_theme_layout($layout, $available) {
   global $theme;
@@ -329,32 +320,49 @@ function content_moderation_drupalwiki_menu_alter($tree) {
 
   return $tree;
 }
-/*
- * Implementation of hook_perm.
- */
-function content_moderation_permission() {
-  // TODO: cache this
-  // This user right is later used for granting the user the approval of pending version
-  // making those version "live".
-  $states = _content_moderation_states();
-  $types = _content_moderation_moderate_node_types();
-  $rights = array();
-  foreach ($types as $type) {
-    foreach ($states as $from_state) {
-      $to_states = _content_moderation_next_states($from_state, $type);
-      // values are translated
-      $to_states = array_keys($to_states);
-      foreach ($to_states as $to_state) {
-        $rights[] = "content moderation $type state $from_state to $to_state";
-      }
-    }
-    $rights[] = "content moderation view $type moderation history";
-  }
-  $rights[] = 'view content moderation message created by';
-  $rights[] = 'view content moderation message pending';
-  $rights[] = 'view content moderation message no live yet';
 
-  return $rights;
+/**
+* Implementation of hook_permission().
+*/
+function content_moderation_permission() {
+  static $rights = FALSE;
+
+  if (! $rights) {
+    // This user right is later used for granting the user the approval of pending version
+    // making those version "live".
+    $states = content_moderation_states();
+    $types = content_moderation_node_types();
+    $rights = array();
+    foreach ($types as $type) {
+      foreach ($states as $from_state) {
+        $to_states = _content_moderation_next_states($from_state, $type);
+        // values are translated
+        $to_states = array_keys($to_states);
+        foreach ($to_states as $to_state) {
+          $rights["moderate $type state $from_state to $to_state"] = array(
+            'title' => t('Moderate from state !type to !to_state', array('!type' => $from_state, '!to_state' => $to_state)),
+          );
+        }
+      }
+      $rights["view $type moderation history"] = array(
+        'title' => t('View !type moderation history', array('!type' => $type)),
+        'description' => t('See the complete moderation history of !type content type')
+      );
+
+    }
+
+    $rights['view content moderation message'] = array(
+      'title' => t('View the moderation messages on a node')
+    );
+
+    $rights['view content moderation message pending'] = array(
+      'title' => t('View the moderation messages on a node that is pending')
+    );
+
+    $rights['view content moderation message not live yet'] = array(
+      'title' => t('View the moderation messages on a node that is not live yet')
+    );
+  }
 }
 
 /*
@@ -409,9 +417,8 @@ function content_moderation_form_alter(&$form, $form_state, $form_id) {
  */
 function theme_content_moderation_node_history($history) {
   $data = array();
-
-  foreach ($history as $e) {
-    $user = user_load_multiple($e->uid);
+  foreach ($history['history'] as $e) {
+    $user = user_load($e->uid);
     $state_class = "state_{$e->state_name}";
     // TODO: proper localized date format
     $data[] = array(
@@ -478,8 +485,8 @@ function _content_moderation_node_edit_page($node) {
  * Fetch the revision data without using node_load to save some performance.
  */
 function _content_moderation_revision_infos($vid) {
-  $result = db_query('SELECT * FROM {node_revisions} WHERE vid=%d', $vid);
-  return db_fetch_object($result);
+  $result = db_query('SELECT * FROM {node_revision} WHERE vid = :vid', array(':vid' => $vid))->fetchObject();
+  return $result;
 }
 
 /*
@@ -493,8 +500,7 @@ function _content_moderation_latest_revision($nid) {
  * Generating a history overview of a node.
  */
 function _content_moderation_history($node) {
-  $m = drupal_get_path('module', 'content_moderation');
-  drupal_add_css("$m/css/content_moderation_history.css");
+  drupal_add_css(drupal_get_path('module', 'content_moderation') .'/css/content_moderation_history.css');
   $history = _content_moderation_get_history(array('name' => 'nid', 'value' => $node->nid));
   drupal_set_title(t('History'));
   return theme('content_moderation_node_history', array('history' => $history));
@@ -504,15 +510,18 @@ function _content_moderation_history($node) {
  * Returning the node object of the live version of the node
  */
 function _content_moderation_live_revision($nid) {
-  $live_state = _content_moderation_live_state();
-  $vid = db_query("SELECT vid FROM {content_moderation_node_history} WHERE nid = :nid AND state_name = :state ORDER BY hid DESC LIMIT 1", array(
-      ':nid' => $nid, ':state' => $live_state))
-    ->fetchField();
-  if ($vid == false) {
+  $vid = db_query("SELECT vid FROM {content_moderation_node_history} 
+    WHERE nid = :nid
+      AND state_name = :state
+    ORDER BY hid DESC LIMIT 1",
+    array(
+      ':nid' => $nid,
+      ':state' =>  _content_moderation_live_state()
+    )
+  )->fetchField();
+  if (! $vid) {
     return NULL;
   }
-
-  return node_load($nid, $vid);
 }
 
 /*
@@ -564,7 +573,7 @@ function _content_moderation_moderate_node_types() {
  * Getting nid by vid
  */
 function _content_moderation_get_nid($vid) {
-  return db_query('select nid from {node_revisions} where vid=%d', $vid)->fetchField();
+  return db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $vid))->fetchField();
 }
 
 /*
@@ -683,21 +692,21 @@ function _content_moderation_get_latest_revisions($nid, $limit = 5, $vid = NULL,
 }
 
 function _content_moderation_get_current_viewed_node() {
-  $router_item = menu_get_item($path);
-  // if its not a node view, return
-  if ($router_item['map'][0] != 'node') {
-    return NULL;
+  // Check the load function to see if a node is being loaded from
+  // the menu router
+  $router_item = menu_get_item();
+  // Look for the node load function and then get the argument for the node
+  if ($key = array_search('node_load' , $router_item['load_functions'])) {
+    // Now we need to find the node
+    if (! $node = $router_item['map'][$key]) {
+      return NULL;
+    }
   }
 
-  $node = $router_item['map'][1];
-  // something wrong with the url
-  if (!is_object($node)) {
-    return NULL;
-  }
-
+  // Do we need to load a specific revision of this node?
+  // @TODO is this really working?
   if (is_numeric($router_item['map'][2]) && $router_item['map'][3] == 'view') {
     $vid = $router_item['map'][2];
-
     $node = node_load($node->nid, $vid);
   }
   return $node;

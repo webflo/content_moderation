@@ -16,8 +16,16 @@ function content_moderation_change_state_form($form, &$form_state, $vid) {
   $node = node_load($nid, $vid);
   // Get all states we can switch to respecting the user rights and the transition
   // table
-  $states = _content_moderation_next_states($curstate, $node->type, $user);
-
+  if (! $states = _content_moderation_next_states($curstate, $node->type, $user)) {
+    drupal_set_message(t('Sorry, there are no new moderation states for the %state state.
+      Perhaps you need to !create?', array(
+        '%state' => $curstate,
+        '!create' => l(t('create another'), 'admin/config/content_moderation/transitions'))),
+      'error'
+    );
+    return;
+  }
+   
   $form = array();
   $form['#attributes'] = array('enctype' => "multipart/form-data");
   $form['user'] = array(
@@ -118,8 +126,8 @@ function _content_moderation_update_revision_state($vid, $nid, $state) {
   );
   $keys = array();
   // Check if we have an entry allready. Update if needed.
-  $result = db_fetch_object( db_query("select vid from {content_moderation_revision_state} where vid=%d", $vid) );
-  if (is_object($result)) {
+  $result = db_query("SELECT vid FROM {content_moderation_revision_state} WHERE vid = :vid", array(':vid' => $vid))->fetchField();
+  if ($result) {
     $keys = array('vid');
   }
   drupal_write_record('content_moderation_revision_state', $revison_state, $keys);
@@ -176,31 +184,29 @@ function _content_moderation_save_history($node, $curstate, $nextstate, $uid, $c
 function _content_moderation_get_history($key, $tostate = NULL) {
   if ($tostate != NULL) {
     $results = db_query("SELECT * FROM {content_moderation_node_history}
-      WHERE :key = :value
+      WHERE {$key['name']} = :value
         AND state_name = :state
       ORDER BY stamp DESC",
       array(
-        ':key' => $key['name'],
         ':value' => $key['value'],
         ':state' => $tostate
       )
     );
   }
   else {
-    $results = db_query('SELECT * FROM {content_moderation_node_history}
-      WHERE :key = :value
-      ORDER BY stamp DESC',
+    $results = db_query("SELECT * FROM {content_moderation_node_history}
+      WHERE {$key['name']} = :value
+      ORDER BY stamp DESC",
       array(
-        ':key' => $key['name'],
         ':value' => $key['value']
       )
     );
   }
+
   $history = array();
   foreach ($results as $entry) {
     $history[] = $entry;
   }
-
   return $history;
 }
 
@@ -214,11 +220,23 @@ function _content_moderation_get_history($key, $tostate = NULL) {
  */
 function _content_moderation_next_states($curstate, $node_type = 'all', $user = NULL) {
   if ($curstate == "") {
-    $curstate = 'none';
+    $curstate = _content_moderation_none_state();
   }
-  $result = db_query("select to_name as state from {content_moderation_transition} where from_name='%s' and (ntype='%s' OR ntype='all')", $curstate, $node_type);
+  $results = db_query("SELECT to_name AS state
+    FROM {content_moderation_transition}
+    WHERE from_name = :from_name
+      AND (
+        ntype = :ntype
+        OR ntype = 'all'
+      )",
+    array(
+      ':from_name' => $curstate,
+      ':ntype' => $node_type
+    )
+  );
+
   $states = array();
-  while ($state = db_fetch_object($result)) {
+  foreach($results as $state) {
     $states[$state->state] = t($state->state);
   }
 
@@ -229,6 +247,7 @@ function _content_moderation_next_states($curstate, $node_type = 'all', $user = 
       }
     }
   }
+
   return $states;
 }
 
@@ -236,10 +255,10 @@ function _content_moderation_next_states($curstate, $node_type = 'all', $user = 
  * Get all states possible
  */
 function _content_moderation_states() {
-  $result = db_query('select * from {content_moderation_states}');
+  $results = db_query('SELECT * FROM {content_moderation_states}');
   //TODO: cache this
   $states = array();
-  while ($state = db_fetch_object($result)) {
+  foreach ($results as $state) {
     $states[] = $state->name;
   }
   return $states;
@@ -266,11 +285,12 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
     // Do not allow state changing of revisions, which are not the latest
 
     if (!is_array($revisions) || $revisions[0]->vid != $vid) {
-      return false;
+     // return false;
     }
   }
 
   // User must have write access to do anything state related
+  // @TODO this needs to be abstracted to a hook
   if (module_exists('impressive_media_icombinded_access')) {
     if (impressive_media_icombined_access_accesscheck('update', $node) === false) {
       return false;
@@ -285,11 +305,13 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
   // Does the user has rights to change to any allowed next states?
   $curstate = _content_moderation_current_state($vid);
   if ($state != NULL) {
+
     return _content_moderation_state_allowed($user, $curstate, $state, $node->type);
   }
   else if (count(_content_moderation_next_states($curstate, $node->type, $user)) > 0) {
     return true;
   }
+
   //else
   return false;
 }
@@ -298,14 +320,10 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
  * Get the current state of a revision *
  */
 function _content_moderation_current_state($vid) {
-  $result = db_query('select state from {content_moderation_revision_state} where vid=%d', $vid);
-  $row = db_fetch_object($result);
-
-  if (is_object($row)) {
-    return $row->state;
+  $state = db_query("SELECT state FROM {content_moderation_revision_state} WHERE vid = :vid", array(':vid' => $vid))->fetchfield();
+  if ($state) {
+    return $state;
   }
-
-  // return default
-  return 'none';
+  return _content_moderation_none_state();
 }
 
