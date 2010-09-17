@@ -4,9 +4,9 @@
 # Copyright (c) 2010 Impressive.media
 # Author: Eugen Mayer
 
-require_once DRUPAL_ROOT . '/' . 'content_moderation.workflow.inc';
-require_once DRUPAL_ROOT . '/' . 'content_moderation.trigger.inc';
-require_once DRUPAL_ROOT . '/' . 'content_moderation.rules.inc';
+require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.workflow.inc';
+require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.trigger.inc';
+require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.rules.inc';
 
 /*
  * Implementation of hook_menu().
