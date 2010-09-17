@@ -135,10 +135,10 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
  * Get all states possible
  */
 function _content_moderation_workflow_ui_admin_states() {
-  $result = db_query('select * from {content_moderation_states}');
+  $results = db_query("SELECT * FROM {content_moderation_states}");
   //TODO: cache this
   $states = array();
-  while ($state = db_fetch_object($result)) {
+  foreach ($results as $state) {
     $states[$state->name] = $state->descr ? $state->descr : $state->name;
   }
   return $states;
