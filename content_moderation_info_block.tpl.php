@@ -40,7 +40,8 @@ if($live != NULL) {
 $view_current_link = l($view_icon,"node/{$node->nid}/revisions/{$node->vid}/view",array('html' => true, 'attributes' => array( 'title' => t('View this revision.') ) ));
 $current_rev_link = l($node->vid,"node/{$node->nid}/revisions/{$node->vid}/view",array('html' => true, 'attributes' => array( 'title' => t('View this revision.') ) ));
 
-if(module_exists('diff')){
+$compare = '';
+if (module_exists('diff')){
   $compare_live = l($rev_icon,$links['compare_with_live'],array('html' => true, 'attributes' => array( 'title' => t('Compare this revision with the live revision.') ) ));
   $compare = l($rev_icon,$links['compare'],array('html' => true, 'attributes' => array( 'title' => t('List all revisions.') ) ));
 }
@@ -54,7 +55,7 @@ if(module_exists('diff')){
   <?php if($live != NULL) {
     $live_user = user_load($live->revision_uid);
     ?>
-    <div class="info live_info"><?php print $live->vid?>: <?=$live_link.$view_live_link.$compare?><br/>
+    <div class="info live_info"><?php print $live->vid . ': ' . $view_live_link . $compare; ?><br/>
     <span class="details">&raquo; <?php print format_date($live->revision_timestamp, 'small')?> (<?php print $live_user->name?>)</span>
     </div>
   <?php }  else { ?>
