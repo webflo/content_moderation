@@ -1,4 +1,5 @@
 <?php
+
 // $Id: content_moderation.module,v 1.12.2.17 2010/04/18 11:31:29 eugenmayer Exp $
 
 # Copyright (c) 2010 Impressive.media
@@ -8,7 +9,7 @@ require_once drupal_get_path('module', 'content_moderation') . '/content_moderat
 require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.trigger.inc';
 require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.rules.inc';
 
-/*
+/**
  * Implementation of hook_menu().
  */
 function content_moderation_menu() {
@@ -56,7 +57,7 @@ function content_moderation_menu() {
   return $items;
 }
 
-/*
+/**
  * Implementation of hook_menu_alter
  */
 function content_moderation_menu_alter(&$items) {
@@ -85,7 +86,7 @@ function content_moderation_block_view($delta) {
 }
 
 
-/*
+/**
  * Implementation of hook_theme
  */
 function content_moderation_theme() {
@@ -280,7 +281,7 @@ function content_moderation_yaml_theme_layout($layout, $available) {
   return '2col_right_13';
 }
 
-/*
+/**
  * Add a edit button if we are viewing a live-version or the current latest version
  */
 function content_moderation_drupalwiki_menu_alter($tree) {
@@ -358,7 +359,7 @@ function content_moderation_permission() {
   }
 }
 
-/*
+/**
  * Implementation of hook_form_alter
  */
 function content_moderation_form_node_type_form_alter(&$form, $form_state) {
@@ -366,7 +367,7 @@ function content_moderation_form_node_type_form_alter(&$form, $form_state) {
   $form['#validate'][] = '_content_moderation_validate_node_type_form';
 }
 
-/*
+/**
  * Implementation of hook_form_alter.
  * Forcing new reversion and publishing.
  */
@@ -404,7 +405,7 @@ function content_moderation_form_alter(&$form, $form_state, $form_id) {
   }
 }
 
-/*
+/**
  * Implementation content_moderation_node_history
  * Theming the output of content moderations history table
  */
@@ -435,14 +436,14 @@ function theme_content_moderation_node_history($history) {
                 , 'rows' => $data));
 }
 
-/*
+/**
  * Needed by the views API
  */
 function content_moderation_views_api() {
   return array('api' => 2.0);
 }
 
-/*
+/**
  * This is our small helper to ensure, that always the newes vid gets edited.
  * The normal node API would edit the vid which is currently in {node} table,
  * But we want to edit the VID which is the most recent one.
@@ -474,7 +475,7 @@ function _content_moderation_node_edit_page($node) {
   return node_page_edit($node);
 }
 
-/*
+/**
  * Fetch the revision data without using node_load to save some performance.
  */
 function _content_moderation_revision_infos($vid) {
@@ -482,14 +483,14 @@ function _content_moderation_revision_infos($vid) {
   return $result;
 }
 
-/*
+/**
  * Calculated the most recent vid of the current node
  */
 function _content_moderation_latest_revision($nid) {
   return db_query('SELECT MAX(vid) FROM {node_revision} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
 }
 
-/*
+/**
  * Generating a history overview of a node.
  */
 function _content_moderation_history($node) {
@@ -499,7 +500,7 @@ function _content_moderation_history($node) {
   return theme('content_moderation_node_history', array('history' => $history));
 }
 
-/*
+/**
  * Returning the node object of the live version of the node
  */
 function _content_moderation_live_revision($nid) {
@@ -519,7 +520,7 @@ function _content_moderation_live_revision($nid) {
   return node_load($nid, $vid);
 }
 
-/*
+/**
  * Returns the key which represents the live version.
  * Should be later an interface to change the live state
  */
@@ -527,7 +528,7 @@ function _content_moderation_live_state() {
   return 'live';
 }
 
-/*
+/**
  * Returns the key which represents the neutral non moderated version.
  * Should be later an interface to change the live state
  */
@@ -535,7 +536,7 @@ function _content_moderation_none_state() {
   return 'none';
 }
 
-/*
+/**
  * Determine if this content type is set to be moderated
  */
 function _content_moderation_moderate_node_type($type) {
@@ -548,7 +549,7 @@ function _content_moderation_moderate_node_type($type) {
   return FALSE;
 }
 
-/*
+/**
  * Determine if this content type is set to be moderated
  */
 function _content_moderation_moderate_node_types() {
@@ -564,21 +565,21 @@ function _content_moderation_moderate_node_types() {
   return $result;
 }
 
-/*
+/**
  * Getting nid by vid
  */
 function _content_moderation_get_nid($vid) {
   return db_query('SELECT nid FROM {node_revision} WHERE vid = :vid', array(':vid' => $vid))->fetchField();
 }
 
-/*
+/**
  * Return the proper path to the change-state action
  */
 function _content_moderation_change_state_link($vid, $nid) {
   return "moderate/$nid/$vid/change";
 }
 
-/*
+/**
  * Checking, if the user has the proper rights to change the state of a node, so
  * checking the transition and node type.
  */
@@ -586,8 +587,9 @@ function _content_moderation_state_allowed($user, $from_state, $to_state, $node_
   return user_access("content moderation $node_type state $from_state to $to_state");
 }
 
-/*
+/**
  * Provides a hook where modules can register there access handler.
+ *
  * Example:
  *
  * function mymodul_content_moderation_access($op,$node) {
@@ -624,7 +626,7 @@ function _content_moderation_access($op, $node) {
   }
 }
 
-/*
+/**
  * Get a number of latest revisions of a node.
  * Use 0 for limit if you want all the revisions
  */
@@ -711,7 +713,7 @@ function _content_moderation_get_current_viewed_node() {
   return $node;
 }
 
-/*
+/**
  * Small helper for trigger and rules
  */
 function _content_moderation_node_transition_matrix() {
@@ -735,7 +737,7 @@ function _content_moderation_node_transition_matrix() {
   return $node_state_matrix;
 }
 
-/*
+/**
  * Checks if the current version is the currently shown as live
  * without beeing approved before (current vid in the {node} table
  */
@@ -807,7 +809,7 @@ function _content_moderation_has_moderated_revisions($nid) {
   return $revs;
 }
 
-/*
+/**
  * Helper to ensure, that 'Create new revision is always checked', when a node type is selected to be moderated
  */
 function _content_moderation_validate_node_type_form($from, &$form_state) {
@@ -817,7 +819,7 @@ function _content_moderation_validate_node_type_form($from, &$form_state) {
   }
 }
 
-/*
+/**
  * Redirects to the new created revisions
  */
 function _content_moderation_submit_node_form($form, &$form_state) {

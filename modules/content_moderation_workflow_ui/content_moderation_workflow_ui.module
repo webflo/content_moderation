@@ -1,7 +1,8 @@
 <?php
 
+// $Id$
 
-/*
+/**
  * Implementation of hook_menu().
  */
 function content_moderation_workflow_ui_menu() {
@@ -26,6 +27,7 @@ function content_moderation_workflow_ui_menu() {
 
 /**
  * Form builder function for module settings.
+ *
  * Defining states
  */
 function content_moderation_workflow_ui_admin_settings_states($form, &$form_state) {
@@ -78,6 +80,7 @@ function content_moderation_workflow_ui_admin_settings_states($form, &$form_stat
 
 /**
  * Form builder function for module settings.
+ *
  * Defining transitions
  */
 function content_moderation_workflow_ui_admin_settings_transitions($form, &$form_state) {
@@ -131,7 +134,7 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
   return $form;
 }
 
-/*
+/**
  * Get all states possible
  */
 function _content_moderation_workflow_ui_admin_states() {

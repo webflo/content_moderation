@@ -1,10 +1,11 @@
 <?php
+
 // $Id$
 
 # Copyright (c) 2010 Impressive.media
 # Author: Eugen Mayer
 
-/*
+/**
  * General form to change the state of a revision
  * Currently we only support changing from one step to the other
  */
@@ -68,8 +69,9 @@ function content_moderation_change_state_form($form, &$form_state, $vid) {
   return $form;
 }
 
-/*
+/**
  * Implementation of hook_form_validate
+ *
  * Validate if the user is providing a valid next state and is allowed to change state
  * of the provided node
  */
@@ -82,7 +84,7 @@ function content_moderation_change_state_form_validate($form_id, $form_values) {
   }
 }
 
-/*
+/**
  * Implementation of hook_form_submit
  */
 function content_moderation_change_state_form_submit($form, &$form_state) {
@@ -115,7 +117,7 @@ function content_moderation_change_state_form_submit($form, &$form_state) {
   }
 }
 
-/*
+/**
  * Update state.
  */
 function _content_moderation_update_revision_state($vid, $nid, $state) {
@@ -134,7 +136,7 @@ function _content_moderation_update_revision_state($vid, $nid, $state) {
 }
 
 
-/*
+/**
  * Make the given vid the new live version.
  */
 function _content_moderation_set_live($vid, $nid) {
@@ -167,7 +169,7 @@ function _content_moderation_set_live($vid, $nid) {
   drupal_write_record('content_moderation_revision_state', $update, array('nid', 'vid'));
  }
 
-/*
+/**
  * Save an entry in the content moderation history
  */
 function _content_moderation_save_history($node, $curstate, $nextstate, $uid, $comment) {
@@ -191,7 +193,7 @@ function _content_moderation_save_history($node, $curstate, $nextstate, $uid, $c
   }
 }
 
-/*
+/**
  * Gets the history of a node or a revision, depending on the key.
  */
 function _content_moderation_get_history($key, $tostate = NULL) {
@@ -223,8 +225,9 @@ function _content_moderation_get_history($key, $tostate = NULL) {
   return $history;
 }
 
-/*
+/**
  * Checks all transition from the current revision state to any valid other state.
+ *
  * Optional also filters any next-states which this user is not allowed to change to
  *
  * @curstate: current state of the revision
@@ -264,7 +267,7 @@ function _content_moderation_next_states($curstate, $node_type = 'all', $user = 
   return $states;
 }
 
-/*
+/**
  * Get all states possible
  */
 function _content_moderation_states() {
@@ -277,7 +280,9 @@ function _content_moderation_states() {
   return $states;
 }
 
-/*
+/**
+ * Checks to see if this node can be moderated
+ *
  * Generally check, whether the node-type can be moderated at all
  * and whether the user is allowed to change into that state for that
  * node type.
@@ -332,7 +337,7 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
   return FALSE;
 }
 
-/*
+/**
  * Get the current state of a revision *
  */
 function _content_moderation_current_state($vid) {
