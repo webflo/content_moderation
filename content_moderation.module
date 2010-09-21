@@ -65,15 +65,12 @@ function content_moderation_menu_alter(&$items) {
   $items['node/%node/edit']['page callback'] = '_content_moderation_node_edit_page';
 }
 
-/*
- * Implementing hook_block
- */
+
 /**
  * Implements hook_block_info.
  */
 function content_moderation_block_info() {
-  // TODO Rename block deltas (e.g. delta-0) to readable strings.
-  $blocks['delta-0']['info'] = t('Content moderation info');
+  $blocks['moderation']['info'] = t('Content moderation info');
   return $blocks;
 }
 
@@ -81,41 +78,9 @@ function content_moderation_block_info() {
  * Implements hook_block_view.
  */
 function content_moderation_block_view($delta) {
-  // TODO Rename block deltas (e.g. delta-0) to readable strings.
-  switch ($delta) {
-    case 'delta-0':
-      // Could we load a node?
-      if (! $node = _content_moderation_get_current_viewed_node()) {
-        return;
-      }
-      // No need to show the block if the viewd node is not moderated. Questionable.
-      if (! _content_moderation_moderate_node_type($node->type)) {
-        return;
-      }
-
-      drupal_add_css(drupal_get_path('module', 'content_moderation') . '/css/content_moderation_block.css');
-
-      $pending_revisions = _content_moderation_get_latest_revisions($node->nid, variable_get('content_moderation_pending_count', 5), NULL);
-      $revisions_list = theme('content_moderation_revisions_list', array('revisions' => $pending_revisions));
-      
-      // All kinds of actions we can do.
-      $live = _content_moderation_live_revision($node->nid);
-      if ($live != NULL) {
-        $links['edit_live'] = "node/{$node->nid}/edit";
-        $links['compare'] = "node/{$node->nid}/revisions";
-        $links['live_view'] = 'node/' . $live->nid;
-        $links['compare_with_live'] = "node/{$node->nid}/revisions/view/{$node->vid}/{$live->vid}";
-      }
-      $links['edit_state'] = _content_moderation_change_state_link($node->vid, $node->nid);
-
-      // Get the state of the currently view revision
-      $state = ucfirst(_content_moderation_current_state($node->vid));
-
-      $block['subject'] = t("Revisions");
-      $block['content'] = theme('content_moderation_info_block', array('node' => $node, 'links' => $links, 'state' => $state, 'live' => $live, 'revisions_list' => $revisions_list));
-      $block['cache'] = false;
-      return $block;
-      break;
+  $function = 'content_moderation_block_view_' . $delta;
+  if (function_exists($function)) {
+    return $function();
   }
 }
 
@@ -709,20 +674,21 @@ function _content_moderation_get_current_viewed_node() {
   // Check the load function to see if a node is being loaded from
   // the menu router
   $router_item = menu_get_item();
+  //print_r($router_item);
   // Look for the node load function and then get the argument for the node
   if ($key = array_search('node_load' , $router_item['load_functions'])) {
     // Now we need to find the node
-    if (! isset($router_item['origin_map'][$key])) {
-      return NULL;
+    if (! isset($router_item['map'][$key])) {
+      return;
     }
-    if (! $node = $router_item['origin_map'][$key]) {
+
+    if (! $node = $router_item['map'][$key]) {
       return NULL;
     }
   }
 
   // Do we need to load a specific revision of this node?
-  // @TODO is this really working?
-  if (is_numeric($router_item['origin_map'][2]) && $router_item['origin_map'][3] == 'view') {
+  if (isset($router_item['map'][2]) && (is_numeric($router_item['map'][2]) && $router_item['map'][3] == 'view')) {
     $vid = $router_item['map'][2];
     $node = node_load($node->nid, $vid);
   }
@@ -835,4 +801,44 @@ function _content_moderation_latest_entry_in_history($vid, $state = 'live' ) {
   }
   // else
   return false;
+}
+
+
+/**
+ * Displays content moderation information about a specific node
+ *
+ * @return block array
+ */
+function content_moderation_block_view_moderation() {
+  // Is there a node that is currently being viewed?
+  if (! $node = _content_moderation_get_current_viewed_node()) {
+    return;
+  }
+  // No need to show the block if the viewd node is not moderated. Questionable.
+  if (! _content_moderation_moderate_node_type($node->type)) {
+    return;
+  }
+
+  drupal_add_css(drupal_get_path('module', 'content_moderation') . '/css/content_moderation_block.css');
+
+  $pending_revisions = _content_moderation_get_latest_revisions($node->nid, variable_get('content_moderation_pending_count', 5), NULL);
+  $revisions_list = theme('content_moderation_revisions_list', array('revisions' => $pending_revisions));
+
+  // All kinds of actions we can do.
+  $live = _content_moderation_live_revision($node->nid);
+  if ($live != NULL) {
+    $links['edit_live'] = "node/{$node->nid}/edit";
+    $links['compare'] = "node/{$node->nid}/revisions";
+    $links['live_view'] = 'node/' . $live->nid;
+    $links['compare_with_live'] = "node/{$node->nid}/revisions/view/{$node->vid}/{$live->vid}";
+  }
+  $links['edit_state'] = _content_moderation_change_state_link($node->vid, $node->nid);
+
+  // Get the state of the currently view revision
+  $state = ucfirst(_content_moderation_current_state($node->vid));
+
+  $block['subject'] = t("Revisions");
+  $block['content'] = theme('content_moderation_info_block', array('node' => $node, 'links' => $links, 'state' => $state, 'live' => $live, 'revisions_list' => $revisions_list));
+  $block['cache'] = false;
+  return $block;
 }
