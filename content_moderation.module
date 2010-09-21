@@ -84,9 +84,12 @@ function content_moderation_block_view($delta) {
   // TODO Rename block deltas (e.g. delta-0) to readable strings.
   switch ($delta) {
     case 'delta-0':
-      $node = _content_moderation_get_current_viewed_node();
+      // Could we load a node?
+      if (! $node = _content_moderation_get_current_viewed_node()) {
+        return;
+      }
       // No need to show the block if the viewd node is not moderated. Questionable.
-      if (!_content_moderation_moderate_node_type($node->type)) {
+      if (! _content_moderation_moderate_node_type($node->type)) {
         return;
       }
 
@@ -94,7 +97,7 @@ function content_moderation_block_view($delta) {
 
       $pending_revisions = _content_moderation_get_latest_revisions($node->nid, variable_get('content_moderation_pending_count', 5), NULL);
       $revisions_list = theme('content_moderation_revisions_list', array('revisions' => $pending_revisions));
-
+      
       // All kinds of actions we can do.
       $live = _content_moderation_live_revision($node->nid);
       if ($live != NULL) {
@@ -104,7 +107,7 @@ function content_moderation_block_view($delta) {
         $links['compare_with_live'] = "node/{$node->nid}/revisions/view/{$node->vid}/{$live->vid}";
       }
       $links['edit_state'] = _content_moderation_change_state_link($node->vid, $node->nid);
-     
+
       // Get the state of the currently view revision
       $state = ucfirst(_content_moderation_current_state($node->vid));
 
@@ -709,14 +712,17 @@ function _content_moderation_get_current_viewed_node() {
   // Look for the node load function and then get the argument for the node
   if ($key = array_search('node_load' , $router_item['load_functions'])) {
     // Now we need to find the node
-    if (! $node = $router_item['map'][$key]) {
+    if (! isset($router_item['origin_map'][$key])) {
+      return NULL;
+    }
+    if (! $node = $router_item['origin_map'][$key]) {
       return NULL;
     }
   }
 
   // Do we need to load a specific revision of this node?
   // @TODO is this really working?
-  if (is_numeric($router_item['map'][2]) && $router_item['map'][3] == 'view') {
+  if (is_numeric($router_item['origin_map'][2]) && $router_item['origin_map'][3] == 'view') {
     $vid = $router_item['map'][2];
     $node = node_load($node->nid, $vid);
   }
