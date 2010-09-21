@@ -156,6 +156,22 @@ function content_moderation_node_presave($node) {
   }
 }
 
+
+/**
+ * Implements hook_node_load.
+ *
+ * Load content moderation history and status on a node.
+ */
+function content_moderation_node_load($nodes) {
+  foreach ($nodes as $node) {
+    // Check to make sure that this node type is moderated
+    if (_content_moderation_moderate_node_type($node->type)) {
+      content_moderation_node_history($node);
+    }
+  }
+}
+
+
 /**
  * Implements hook_node_update.
  */
@@ -742,6 +758,30 @@ function _content_moderation_show_latest_revision($node) {
   menu_set_active_item("node/{$node->nid}/revisions/{$node->vid}/view");
   return node_page_view($node);
 }
+
+
+/**
+ * Adds history and current status to a node
+ *
+ * @param $node
+ *   Object, Drupal node object
+ */
+function content_moderation_node_history(&$node) {
+  // Get history
+  $results = db_query('SELECT * FROM {content_moderation_node_history}
+    WHERE nid = :nid
+    ORDER BY hid', array(':nid' => $node->nid)
+  );
+  foreach ($results as $result) {
+    $node->content_moderation['history'][$result->hid] = $result;
+  }
+  // Get the current state
+  $current = db_query('SELECT * FROM {content_moderation_revision_state} WHERE nid = :nid',
+    array(':nid' => $node->nid))
+    ->fetch();
+  $node->content_moderation['current'] = $current;
+}
+
 
 function _content_moderation_has_moderated_revisions($nid) {
   // Get all revisions which are neither in the none nor in the live state
