@@ -28,18 +28,18 @@ foreach($revisions as $rev) {
   $compare_live = '';
   $compare = '';
 
-  $view_link = l($view_icon,"node/{$rev->nid}/revisions/{$rev->vid}/view",array('html' => true, 'attributes' => array( 'title' => t('View revision @rev.',array('@rev' => $rev->vid) ))));
-  $revision_link = l($rev->vid,"node/{$rev->nid}/revisions/{$rev->vid}/view",array('html' => true, 'attributes' => array( 'title' => t('View revision @rev.',array('@rev' => $rev->vid) ))));
+  $view_link = l($view_icon,"node/{$rev->nid}/revisions/{$rev->vid}/view",array('html' => TRUE, 'attributes' => array( 'title' => t('View revision @rev.',array('@rev' => $rev->vid) ))));
+  $revision_link = l($rev->vid,"node/{$rev->nid}/revisions/{$rev->vid}/view",array('html' => TRUE, 'attributes' => array( 'title' => t('View revision @rev.',array('@rev' => $rev->vid) ))));
 
-  if(_content_moderation_statechange_allowed($rev->vid) !== false) {
-    $edit_state_link = l($edit_state_icon,_content_moderation_change_state_link($rev->vid,$rev->nid),array('html' => true, 'attributes' => array( 'title' => t('Change state of revision @rev.',array('@rev' => $rev->vid) ))));
+  if(_content_moderation_statechange_allowed($rev->vid) !== FALSE) {
+    $edit_state_link = l($edit_state_icon,_content_moderation_change_state_link($rev->vid,$rev->nid),array('html' => TRUE, 'attributes' => array( 'title' => t('Change state of revision @rev.',array('@rev' => $rev->vid) ))));
   }
   if(module_exists('diff')){
     $live = _content_moderation_live_revision($node->nid);
     if($live != NULL) {
-      $compare_live = l($rev_icon,"node/{$rev->nid}/revisions/view/{$live->vid}/{$rev->vid}",array('html' => true, 'attributes' => array( 'title' => t('Compare this revision with the current live revision.') ) ));
+      $compare_live = l($rev_icon,"node/{$rev->nid}/revisions/view/{$live->vid}/{$rev->vid}",array('html' => TRUE, 'attributes' => array( 'title' => t('Compare this revision with the current live revision.') ) ));
     }
-    $compare = l($rev_icon,$links['compare'],array('html' => true, 'attributes' => array( 'title' => t('List all revisions.') ) ));
+    $compare = l($rev_icon,$links['compare'],array('html' => TRUE, 'attributes' => array( 'title' => t('List all revisions.') ) ));
   }
   $compare = 'compare';
 

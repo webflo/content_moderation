@@ -125,7 +125,7 @@ function content_moderation_node_prepare($node) {
       $live =  _content_moderation_live_revision($node->nid);
       // We only need to change the behavior if the current version is not the latest pending version
       if ($live != NULL && $node->vid != $live->vid) {
-        drupal_set_message(t('You are now editing the most recent pending revision (@revision) and not the live version!', array('@revision' => $node->vid)), 'warning', false);
+        drupal_set_message(t('You are now editing the most recent pending revision (@revision) and not the live version!', array('@revision' => $node->vid)), 'warning', FALSE);
       }
     }
   }
@@ -146,12 +146,12 @@ function content_moderation_node_presave($node) {
     $current_title = _content_moderation_get_current_title($node->nid);
     // Lets backup the new title if they differ. We need this as we will set back the title here
     // so modules like pathalias dont break when the node get saved ( path alias will follow the new title otherwise)
-    if ($current_title != false && $current_title != $node->title) {
+    if ($current_title != FALSE && $current_title != $node->title) {
       $node->new_title = $node->title;
       $node->title = $current_title;
     }
     else {
-      $node->new_title = false;
+      $node->new_title = FALSE;
     }
   }
 }
@@ -184,7 +184,7 @@ function content_moderation_node_update($node) {
   // so in that case, content moderation behaves like the classic node edit workflow
   if ($node->live != NULL) {
     // Reset the title.
-    if ($node->new_title !== false) {
+    if ($node->new_title !== FALSE) {
       $data = array(
         'title' => $node->new_title, 
         'vid' => $node->vid
@@ -379,20 +379,20 @@ function content_moderation_form_alter(&$form, $form_state, $form_id) {
 
   // force new revision
   $form['revision_information']['revision']['#prefix'] = t('As this content is in moderation, you cannot choose here. A new revision is always created.');
-  $form['revision_information']['revision']['#disabled'] = true;
-  $form['revision_information']['revision']['#default_value'] = true;
+  $form['revision_information']['revision']['#disabled'] = TRUE;
+  $form['revision_information']['revision']['#default_value'] = TRUE;
 
   $descr = t('You cant choose here, as this content is under moderation. Publishing is forced.');
   if (is_array($form['options']['status']) && variable_get('content_moderation_force_publish', 1)) {
-    $form['options']['status']['#disabled'] = true;
-    $form['options']['status']['#default_value'] = true;
+    $form['options']['status']['#disabled'] = TRUE;
+    $form['options']['status']['#default_value'] = TRUE;
     $form['options']['status']['#prefix'] = $descr;
-    $form['options']['status']['#value'] = true;
+    $form['options']['status']['#value'] = TRUE;
   }
   if (module_exists('impressive_media_icombined_access')) {
-    $form['custom_options']['status']['#disabled'] = true;
-    $form['custom_options']['status']['#default_value'] = true;
-    $form['custom_options']['status']['#value'] = true;
+    $form['custom_options']['status']['#disabled'] = TRUE;
+    $form['custom_options']['status']['#default_value'] = TRUE;
+    $form['custom_options']['status']['#value'] = TRUE;
     $form['custom_options']['status']['#prefix'] = $descr;
   }
   // Add this so we get redirected to the new create revision.
@@ -457,7 +457,7 @@ function _content_moderation_node_edit_page($node) {
       $none_state = _content_moderation_none_state();
       drupal_set_message(t('You cannot edit the document, as the latest revision is under moderation. Set the revision back to the state "!state" to be able to edit.', array('!state' => $none_state)), 'warning');
       drupal_goto("node/{$node->nid}");
-      return false;
+      return FALSE;
     }
   }
   if (_content_moderation_moderate_node_type($node->type)) {
@@ -542,10 +542,10 @@ function _content_moderation_moderate_node_type($type) {
   // Is this content even in moderatation?
   $var = variable_get( "node_options_$type", array(0));
   if ( array_search('node_content_moderation', $var) ) {
-    return true;
+    return TRUE;
   }
   //else
-  return false;
+  return FALSE;
 }
 
 /*
@@ -599,14 +599,14 @@ function _content_moderation_state_allowed($user, $from_state, $to_state, $node_
  * }
  */
 function _content_moderation_access($op, $node) {
-  if (_content_moderation_moderate_node_type($node->type) === false) {
-    return false;
+  if (_content_moderation_moderate_node_type($node->type) === FALSE) {
+    return FALSE;
   }
 
   $modules = module_implements('content_moderation_access');
   if (count($modules) > 0) {
     $grants = module_invoke_all('content_moderation_access', $op, $node);
-    $result = true;
+    $result = TRUE;
     foreach ($grants as $bool) {
       $return = $return && $bool;
     }
@@ -656,7 +656,7 @@ function _content_moderation_get_latest_revisions($nid, $limit = 5, $vid = NULL,
     $filter = '';
   }
   // TODO: important, most probably use db_rewrite_sql here
-  // if vid is still null, we actually dont have a live revision. So we need to count all revisions, even that one
+  // if vid is still NULL, we actually dont have a live revision. So we need to count all revisions, even that one
   // which is currently references in the node table.
   if ($vid == NULL) {
     $results = db_query("SELECT nr.*, cmrs.state
@@ -742,10 +742,10 @@ function _content_moderation_node_transition_matrix() {
 function _content_moderation_is_not_approved_live($vid) {
   $result = db_query('SELECT count(vid) FROM {node} where vid=%d limit 1', $vid)->fetchField();
   if ($result > 0) {
-    return true;
+    return TRUE;
   }
   // else
-  return false;
+  return FALSE;
 }
 
 function _content_moderation_get_current_title($nid) {
@@ -831,7 +831,7 @@ function _content_moderation_latest_live_in_history($nid) {
     return $result[0];
   }
   // else
-  return false;
+  return FALSE;
 }
 
 function _content_moderation_latest_entry_in_history($vid, $state = 'live' ) {
@@ -840,7 +840,7 @@ function _content_moderation_latest_entry_in_history($vid, $state = 'live' ) {
     return $result[0];
   }
   // else
-  return false;
+  return FALSE;
 }
 
 
@@ -879,6 +879,6 @@ function content_moderation_block_view_moderation() {
 
   $block['subject'] = t("Revisions");
   $block['content'] = theme('content_moderation_info_block', array('node' => $node, 'links' => $links, 'state' => $state, 'live' => $live, 'revisions_list' => $revisions_list));
-  $block['cache'] = false;
+  $block['cache'] = FALSE;
   return $block;
 }

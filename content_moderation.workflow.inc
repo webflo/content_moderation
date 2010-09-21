@@ -151,7 +151,7 @@ function _content_moderation_set_live($vid, $nid) {
   
   if (module_exists('pathauto')) {
     // recreate node-path_alias
-    $node = node_load($nid, NULL, true);
+    $node = node_load($nid, NULL, TRUE);
     pathauto_node_update_alias($node, 'update');
   }
 
@@ -290,7 +290,7 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
   // Is this content even in moderatation?
   if (!_content_moderation_moderate_node_type($node->type)) {
     drupal_set_message(t('this content type (!type) is not under moderation', array('!type' => $node->type)), 'error');
-    return false;
+    return FALSE;
   }
 
 
@@ -308,13 +308,13 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
   // User must have write access to do anything state related
   // @TODO this needs to be abstracted to a hook
   if (module_exists('impressive_media_icombinded_access')) {
-    if (impressive_media_icombined_access_accesscheck('update', $node) === false) {
-      return false;
+    if (impressive_media_icombined_access_accesscheck('update', $node) === FALSE) {
+      return FALSE;
     }
   }
   else {
-    if (node_access('update', $node) === false) {
-      return false;
+    if (node_access('update', $node) === FALSE) {
+      return FALSE;
     }
   }
 
@@ -325,11 +325,11 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
     return _content_moderation_state_allowed($user, $curstate, $state, $node->type);
   }
   else if (count(_content_moderation_next_states($curstate, $node->type, $user)) > 0) {
-    return true;
+    return TRUE;
   }
 
   //else
-  return false;
+  return FALSE;
 }
 
 /*

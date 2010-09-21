@@ -170,7 +170,7 @@ function content_moderation_workflow_ui_admin_settings_states_submit($form, &$fo
     }
   }
   if ( isset($form_values['new_state_name']) && strlen($form_values['new_state_name']) > 0 ) {
-    $new_state = (object) null;
+    $new_state = (object) NULL;
     $new_state->name = $form_values['new_state_name'];
     if ( isset($form_values['new_state_desc']) && strlen($form_values['new_state_desc']) > 0 ) {
       $new_state->desc = $form_values['new_state_desc'];
@@ -192,7 +192,7 @@ function content_moderation_workflow_ui_admin_settings_transitions_submit($form,
     }
   }
   if ( $form_values['new_transition_from'] != '0' && $form_values['new_transition_to'] != '0' ) {
-    $new_transition = (object) null;
+    $new_transition = (object) NULL;
     $new_transition->from_name = $form_values['new_transition_from'];
     $new_transition->to_name = $form_values['new_transition_to'];
     $new_transition->ntype = 'all';
