@@ -1,7 +1,13 @@
 <?php
+
 // $Id$
 
-/*
+/**
+ * @file
+ */
+
+
+/**
  * Implements hook_views_data().
  */
 function content_moderation_views_data() {

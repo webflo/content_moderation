@@ -1,7 +1,11 @@
 <?php
+
 // $Id$
 
-// For docs have a look on http://drupal.org/node/375833
+/**
+ * @file
+ *  For docs have a look on http://drupal.org/node/375833
+ */
 
 /**
  * Implements hook_trigger_info().
@@ -18,8 +22,8 @@ function content_moderation_trigger_info() {
   return $triggers;
 }
 
-/*
- * Implementation of hook_trigger_name().
+/**
+ * Implements hook_trigger_name().
  */
 function content_moderation_content_moderation($op, $user) {
   if (!module_exists("trigger")) {

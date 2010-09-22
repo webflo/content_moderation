@@ -2,11 +2,16 @@
 
 // $Id$
 
-# Copyright (c) 2010 Impressive.media
-# Author: Eugen Mayer
+/**
+ * @file
+ * Copyright (c) 2010 Impressive.media
+ * Author: Eugen Mayer
+ */
+
 
 /**
  * General form to change the state of a revision
+ *
  * Currently we only support changing from one step to the other
  */
 function content_moderation_change_state_form($form, &$form_state, $vid) {
@@ -26,7 +31,7 @@ function content_moderation_change_state_form($form, &$form_state, $vid) {
     );
     return;
   }
-   
+
   $form = array();
   $form['#attributes'] = array('enctype' => "multipart/form-data");
   $form['user'] = array(
@@ -70,7 +75,7 @@ function content_moderation_change_state_form($form, &$form_state, $vid) {
 }
 
 /**
- * Implementation of hook_form_validate
+ * Implements hook_form_validate().
  *
  * Validate if the user is providing a valid next state and is allowed to change state
  * of the provided node
@@ -85,7 +90,7 @@ function content_moderation_change_state_form_validate($form_id, $form_values) {
 }
 
 /**
- * Implementation of hook_form_submit
+ * Implements hook_form_submit().
  */
 function content_moderation_change_state_form_submit($form, &$form_state) {
   global $user;
@@ -150,7 +155,7 @@ function _content_moderation_set_live($vid, $nid) {
     'nid' => $nid
   );
   drupal_write_record('nide', $record, 'nid');
-  
+
   if (module_exists('pathauto')) {
     // recreate node-path_alias
     $node = node_load($nid, NULL, TRUE);
@@ -167,7 +172,7 @@ function _content_moderation_set_live($vid, $nid) {
     'vid' => $vid,
   );
   drupal_write_record('content_moderation_revision_state', $update, array('nid', 'vid'));
- }
+}
 
 /**
  * Save an entry in the content moderation history
@@ -252,7 +257,7 @@ function _content_moderation_next_states($curstate, $node_type = 'all', $user = 
   );
 
   $states = array();
-  foreach($results as $state) {
+  foreach ($results as $state) {
     $states[$state->state] = t($state->state);
   }
 
@@ -329,7 +334,7 @@ function _content_moderation_statechange_allowed($vid, $state = NULL) {
 
     return _content_moderation_state_allowed($user, $curstate, $state, $node->type);
   }
-  else if (count(_content_moderation_next_states($curstate, $node->type, $user)) > 0) {
+  elseif (count(_content_moderation_next_states($curstate, $node->type, $user)) > 0) {
     return TRUE;
   }
 

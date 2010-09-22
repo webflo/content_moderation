@@ -1,8 +1,13 @@
 <?php
+
 // $Id$
 
+/**
+ * @file
+ */
+
 /*
- * Implementation of the rules hook_rules_event_info
+ * Implements hook_rules_event_info().
  * Docs at: http://drupal.org/node/298549
  */
 function content_moderation_rules_event_info() {

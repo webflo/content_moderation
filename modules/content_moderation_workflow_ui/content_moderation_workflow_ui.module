@@ -3,7 +3,7 @@
 // $Id$
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function content_moderation_workflow_ui_menu() {
   $items = array();
@@ -67,7 +67,7 @@ function content_moderation_workflow_ui_admin_settings_states($form, &$form_stat
     '#title' => 'Delete existing states',
     '#default_value' => array(),
     '#options' => _content_moderation_workflow_ui_admin_states(),
-    '#description' => 'Select all states you want to delete <br> Please note: when deleting an existing state all transitions involving this state will also be deleted.'
+    '#description' => 'Select all states you want to delete <br/> Please note: when deleting an existing state all transitions involving this state will also be deleted.'
   );
   $form['content_moderation_states']['del']['submit_states'] = array(
     '#type' => 'submit',
@@ -123,7 +123,7 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
     '#title' => 'Delete existing transitions',
     '#default_value' => array(),
     '#options' => _content_moderation_workflow_ui_admin_transitions(),
-    '#description' => t('Select all states you want to delete <br> Please note: deleting an existing transition will not have any impact on states involved.')
+    '#description' => t('Select all states you want to delete <br/> Please note: deleting an existing transition will not have any impact on states involved.')
   );
   $form['content_moderation_transitions']['del']['delete'] = array(
     '#type' => 'submit',
@@ -172,10 +172,10 @@ function content_moderation_workflow_ui_admin_settings_states_submit($form, &$fo
       db_query("DELETE FROM {content_moderation_transition} WHERE from_name = :name OR to_name = :name", array(':name' => $state));
     }
   }
-  if ( isset($form_values['new_state_name']) && strlen($form_values['new_state_name']) > 0 ) {
+  if ( isset($form_values['new_state_name']) && drupal_strlen($form_values['new_state_name']) > 0 ) {
     $new_state = (object) NULL;
     $new_state->name = $form_values['new_state_name'];
-    if ( isset($form_values['new_state_desc']) && strlen($form_values['new_state_desc']) > 0 ) {
+    if ( isset($form_values['new_state_desc']) && drupal_strlen($form_values['new_state_desc']) > 0 ) {
       $new_state->desc = $form_values['new_state_desc'];
     }
     drupal_write_record('content_moderation_states', $new_state);
