@@ -748,10 +748,10 @@ function _content_moderation_determine_revision_url($revisions, $nid, $vid, $vie
     $rev_url = "node/{$nid}";
   }
   else {
-    $rev_url = "node/{$nid}/revisions/{$vid}/";
-    if ($view == TRUE) {
+    $rev_url = "node/{$nid}/revisions/{$vid}/view";
+   /*if ($view == TRUE) {
         $rev_url .= "view";
-    }
+    }*/
   }
   return $rev_url;
 }
