@@ -129,7 +129,7 @@ function content_moderation_node_prepare($node) {
   // Check to see if this is an existing node
   if (isset($node->nid)) {
     if (_content_moderation_moderate_node_type($node->type)) {
-      $live =  _content_moderation_live_revision($node->nid);
+      $live = _content_moderation_live_revision($node->nid);
       // We only need to change the behavior if the current version is not the latest pending version
       if ($live != NULL && $node->vid != $live->vid) {
         drupal_set_message(t('You are now editing the most recent pending revision (@revision) and not the live version!', array('@revision' => $node->vid)), 'warning', FALSE);
@@ -183,12 +183,39 @@ function content_moderation_node_load($nodes) {
  * Implements hook_node_update().
  */
 function content_moderation_node_update($node) {
+  global $user;
+  // Is this content in moderation?
+  if (! isset($node->moderation_state_current)) {
+    return;
+  }
+
+  // Write our revision history
+  
+  
+  
+  //
+
+  print_r($node);
+  
+  
+  $record = array(
+    'old_state_name' => $node->moderation_state_current,
+    'state_name' => $node->moderation_state,
+    'nid' => $node->nid,
+    'uid' => $user->uid,
+    '' => ''
+    
+  );
+
   // If we have a current live version (that must not be the current vid entry in {node}!
   // but rather what is in the history table), reset the vid the to live version
   // so that finaly the version presented to the visitor does not change.
 
   // Without a approved version, the node revision shown to the use is changed everytime
   // so in that case, content moderation behaves like the classic node edit workflow
+
+
+
   if ($node->live != NULL) {
     // Reset the title.
     if ($node->new_title !== FALSE) {
@@ -365,13 +392,39 @@ function content_moderation_permission() {
   }
 }
 
+
 /**
  * Implements hook_form_alter().
  */
 function content_moderation_form_node_type_form_alter(&$form, $form_state) {
-  $form['workflow']['node_options']['#options']['node_content_moderation'] = t('Moderate revisions');
-  $form['#validate'][] = '_content_moderation_validate_node_type_form';
+  // Add JS which handles hiding and showing of these options.
+  drupal_add_js(drupal_get_path('module', 'content_moderation') . '/js/content_moderation.js');
+  // What states can this node start out in?
+  $form['workflow']['node_options']['#options']['moderation'] = t('Enable moderation of revisions');
+  $form['workflow']['content_moderation_default_state'] = array(
+    '#title' => t('Default moderation state'),
+    '#type' => 'select',
+    '#options' => content_moderation_states_get(),
+    '#default_value' => variable_get('content_moderation_default_state_' . $form['#node_type']->type),
+    '#description' => t('Set the default workflow state for this content.
+      If a user has additional moderation rights they will be able to change it
+      on the node')
+  );
+  $form['#validate'][] = 'content_moderation_node_type_form_validate';
 }
+
+
+/**
+ * Validate the content type form
+ */
+function content_moderation_node_type_form_validate($from, &$form_state) {
+  // Ensure that revisions are enabled if moderation is.
+  if ($form_state['values']['node_options']['node_content_moderation'] && ! $form_state['values']['node_options']['revision']) {
+    form_set_error('node_options', t('If you chose to moderate this content type,
+      you must switch "Create new revision" in the workflow tab on'));
+  }
+}
+
 
 /**
  * Implements hook_form_alter().
@@ -379,16 +432,48 @@ function content_moderation_form_node_type_form_alter(&$form, $form_state) {
  * Forcing new reversion and publishing.
  */
 function content_moderation_form_alter(&$form, $form_state, $form_id) {
+  global $user;
+
   // This must be a node form and a type that has moderation enabled
-  if (! (isset($form['#node_edit_form']) && _content_moderation_moderate_node_type($form['#node']->type))) {
-    // Dont moderate this content type.
+  if (! (isset($form['#node_edit_form']) && _content_moderation_moderate_node_type($form['type']['#value']))) {
     return;
   }
 
-  // force new revision
-  $form['revision_information']['revision']['#prefix'] = t('As this content is in moderation, you cannot choose here. A new revision is always created.');
-  $form['revision_information']['revision']['#disabled'] = TRUE;
+  // Set a default moderation state if there is not one
+  if (! isset($form['#node']->content_moderation['current'])) {
+    $moderation_state = variable_get('content_moderation_default_state_' . $form['type']['#value']);
+  }
+  
+  // Get all the states *this* user can access. If states is false, this user
+  // can not change  the moderation state
+  $states = content_moderation_states_next($moderation_state, $user, $form['type']['#value']);
+  $current = array($moderation_state => t('Current: !state', array('!state' => $moderation_state)));
+  $states = array_merge($current, $states);
+  $form['options']['moderation_state'] = array(
+    '#title' => t('Moderation state'),
+    '#type' => 'select',
+    '#options' => $states,
+    '#default_value' => $moderation_state,
+    '#description' => t('Set the moderation state for this content.'),
+    '#access' => $states ? TRUE: FALSE,
+  );
+
+  // Store the current moderation state
+  $form['moderation_state_current'] = array(
+    '#type' => 'value',
+    '#value' => $moderation_state
+  );
+
+  // Move the Revision log under publishing to make things pretty
+  $form['options']['log'] = $form['revision_information']['log'];
+  $form['options']['log']['#title'] = t('Moderation notes');
+  unset($form['revision_information']['log']);
+
+  // Always create new revisions for nodes that are moderated
   $form['revision_information']['revision']['#default_value'] = TRUE;
+  // Do not allow users to change the revision status
+  $form['revision_information']['#access'] = FALSE;
+
 
   $descr = t('You cant choose here, as this content is under moderation. Publishing is forced.');
   if (is_array($form['options']['status']) && variable_get('content_moderation_force_publish', 1)) {
@@ -397,12 +482,7 @@ function content_moderation_form_alter(&$form, $form_state, $form_id) {
     $form['options']['status']['#prefix'] = $descr;
     $form['options']['status']['#value'] = TRUE;
   }
-  if (module_exists('impressive_media_icombined_access')) {
-    $form['custom_options']['status']['#disabled'] = TRUE;
-    $form['custom_options']['status']['#default_value'] = TRUE;
-    $form['custom_options']['status']['#value'] = TRUE;
-    $form['custom_options']['status']['#prefix'] = $descr;
-  }
+
   // Add this so we get redirected to the new create revision.
   // Skip this, if thats a new node, as this will happen automatically then
   // Skip this also, if the current node has no approved version then, because content_moderation
@@ -411,6 +491,19 @@ function content_moderation_form_alter(&$form, $form_state, $form_id) {
     $form['buttons']['submit']['#submit'][] = '_content_moderation_submit_node_form';
   }
 }
+
+
+
+/**
+ * Handles the submit of the node form moderation information
+ *
+ * @param $form
+ * @param $form_state
+ */
+function content_moderation_node_insert(&$node) {
+  content_moderation_node_update($node);
+}
+
 
 /**
  * Implementation content_moderation_node_history
@@ -548,16 +641,14 @@ function _content_moderation_none_state() {
  */
 function _content_moderation_moderate_node_type($type) {
   // Is this content even in moderatation?
-  $var = variable_get( "node_options_$type", array(0));
-  if ( array_search('node_content_moderation', $var) ) {
+  if (array_search('moderation', variable_get("node_options_$type", array()))) {
     return TRUE;
   }
-  //else
   return FALSE;
 }
 
 /**
- * Determine if this content type is set to be moderated
+ * List of content types that are moderated
  */
 function _content_moderation_moderate_node_types() {
   $types = node_type_get_types();
@@ -816,15 +907,7 @@ function _content_moderation_has_moderated_revisions($nid) {
   return $revs;
 }
 
-/**
- * Helper to ensure, that 'Create new revision is always checked', when a node type is selected to be moderated
- */
-function _content_moderation_validate_node_type_form($from, &$form_state) {
-  // @TODO maybe just do this by default and notify the admin instead?
-  if ($form_state['values']['node_options']['node_content_moderation'] === 'node_content_moderation' && $form_state['values']['node_options']['revision'] === 0) {
-    form_set_error('node_options', t('If you chose to moderate this content type, you must switch "Create new revision" in the workflow tab on'));
-  }
-}
+
 
 /**
  * Redirects to the new created revisions
@@ -891,3 +974,69 @@ function content_moderation_block_view_moderation() {
   $block['cache'] = FALSE;
   return $block;
 }
+
+
+/**
+ * Return a list of all states in the system
+ */
+function content_moderation_states_get() {
+  static $states;
+  if (! $states) {
+    $results = db_query('SELECT * FROM {content_moderation_states}');
+    $states = array();
+    foreach ($results as $state) {
+      $states[$state->name] = $state->name;
+    }
+  }
+  return $states;
+}
+
+/**
+ * Provides a list of possible next states for this node.
+ *
+ * @param $current_state
+ *   String, current state, optional.
+ * @param $account
+ *   Object, Drupal user, optional. If this is omitted, all states are returned
+ * @param $node_type
+ *   String, node type
+ * @return array or FALSE
+ */
+function content_moderation_states_next($current_state = FALSE, $account = FALSE, $node_type = FALSE) {
+  // Do we have a current state?
+  if (! $current_state) {
+    $current_state = _content_moderation_none_state();
+  }
+
+  $results = db_query("SELECT to_name AS state
+    FROM {content_moderation_transition}
+    WHERE from_name = :from_name
+      AND (
+        ntype = :ntype
+        OR ntype = 'all'
+      )",
+    array(
+      ':from_name' => $current_state,
+      ':ntype' => $node_type
+    )
+  );
+
+  $states = array();
+  foreach ($results as $state) {
+    $states[$state->state] = t($state->state);
+  }
+
+  if ($account && $node_type) {
+    foreach ($states as $state_name => $value) {
+      if (!_content_moderation_state_allowed($account, $current_state, $state_name, $node_type)) {
+        unset($states[$state_name]);
+      }
+    }
+  }
+
+  if ($states) {
+    return $states;
+  }
+  return FALSE;
+}
+
