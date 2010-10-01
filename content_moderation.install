@@ -16,10 +16,7 @@
  */
 function content_moderation_install() {
   // Create tables.
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.;
-  // drupal_install_schema('content_moderation');
   _content_moderation_insert_values();
-
   db_query("UPDATE {system} SET weight = 5 WHERE name = 'content_moderation'");
 }
 
@@ -32,6 +29,7 @@ function content_moderation_schema() {
     'fields'  => array(
       'vid'   => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'nid'   => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'hid'   => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'state' => array('type' => 'varchar', 'length' => '255', 'not null' => FALSE),
     ),
     'primary key' => array('vid'),
