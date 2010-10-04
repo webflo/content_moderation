@@ -49,7 +49,7 @@ function content_moderation_workflow_ui_admin_settings_states($form, &$form_stat
     '#description' => t('Enter name of new state.')
   );
 
-  $form['content_moderation_states']['new']['new_state_desc'] = array(
+  $form['content_moderation_states']['new']['new_state_description'] = array(
     '#type' => 'textarea',
     '#description' => 'Enter an optional description of new state.'
   );
@@ -72,7 +72,8 @@ function content_moderation_workflow_ui_admin_settings_states($form, &$form_stat
 
     $form['content_moderation_states']['delete']['states'][$state] = array(
       '#type' => 'checkbox',
-      '#title' => $state_descr,
+      '#title' => $state,
+      '#description' => ($state_descr != $state) ? $state_descr : '',
       '#default_value' => FALSE,
    );
    // Live and none states can not be deleted
@@ -163,7 +164,7 @@ function _content_moderation_workflow_ui_admin_transitions() {
 }
 
 function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state) {
-  $form_values = $form_state['values'];
+  // Delete any selected states
   foreach ($form_state['values']['delete']['states'] as $state => $action ) {
     // @TODO nodes that are in these moderated states need to be updated to the
     //       previous state? Need to figure this one out- probably can just be
@@ -175,12 +176,11 @@ function content_moderation_workflow_ui_admin_settings_states_submit($form, &$fo
       db_query("DELETE FROM {content_moderation_transition} WHERE from_name = :name OR to_name = :name", array(':name' => $state));
     }
   }
-  if (isset($form_values['new_state_name']) && drupal_strlen($form_values['new_state_name']) > 0 ) {
+  // Add a new step
+  if ($form_state['values']['new_state_name']) {
     $new_state = (object) NULL;
-    $new_state->name = $form_values['new_state_name'];
-    if ( isset($form_values['new_state_desc']) && drupal_strlen($form_values['new_state_desc']) > 0 ) {
-      $new_state->desc = $form_values['new_state_desc'];
-    }
+    $new_state->name = $form_state['values']['new_state_name'];
+    $new_state->descr = isset($form_state['values']['new_state_description']) ? $form_state['values']['new_state_description'] : $new_state->name;
     drupal_write_record('content_moderation_states', $new_state);
   }
   drupal_set_message(t('Your settings have been saved.'));
