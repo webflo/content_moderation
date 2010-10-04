@@ -3,6 +3,13 @@
 // $Id$
 
 /**
+ * @file
+ *
+ * @TODO handle transitions per content 
+ */
+
+
+/**
  * Implements hook_menu().
  */
 function content_moderation_workflow_ui_menu() {
@@ -136,7 +143,7 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
     '#type' => 'checkboxes',
     '#title' => 'Delete existing transitions',
     '#default_value' => array(),
-    '#options' => _content_moderation_workflow_ui_admin_transitions(),
+    '#options' => content_moderation_transitions_get(),
     '#description' => t('Select all states you want to delete <br/> Please note: deleting an existing transition will not have any impact on states involved.')
   );
   $form['content_moderation_transitions']['del']['delete'] = array(
@@ -148,20 +155,6 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
   return $form;
 }
 
-
-/*
- * Get all transitions possible
- */
-function _content_moderation_workflow_ui_admin_transitions() {
-  $results = db_query('SELECT * FROM {content_moderation_transition}');
-  //TODO: cache this
-  $transitions = array();
-  foreach ($results as $transition) {
-    $transinfo = $transition->from_name . '---' . $transition->to_name;
-    $transitions[$transinfo] = $transition->from_name . ' -> ' . $transition->to_name;
-  }
-  return $transitions;
-}
 
 function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state) {
   // Delete any selected states
