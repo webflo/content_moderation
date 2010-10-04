@@ -31,11 +31,11 @@ function content_moderation_workflow_ui_menu() {
  * Defining states
  */
 function content_moderation_workflow_ui_admin_settings_states($form, &$form_state) {
-
   $form['content_moderation_states'] = array(
     '#type' => 'fieldset',
     '#title' => t('Content moderation states'),
-    '#description' => 'Use to define new states or to delete existing ones. States have to be defined before corresponding transitions can be set up.'
+    '#description' => 'Use to define new states or to delete existing ones.
+      States have to be defined before corresponding transitions can be set up.'
   );
   $form['content_moderation_states']['new'] = array(
     '#type' => 'fieldset',
@@ -58,18 +58,31 @@ function content_moderation_workflow_ui_admin_settings_states($form, &$form_stat
     '#type' => 'submit',
     '#value' => t('Create')
   );
-  $form['content_moderation_states']['del'] = array(
+  $form['content_moderation_states']['delete'] = array(
     '#type' => 'fieldset',
     '#title' => 'Delete state',
+    '#tree' => TRUE,
+    '#description' => 'Select all states you want to delete <br/> Please note:
+      when deleting an existing state all transitions involving this state
+      will also be deleted.'
   );
-  $form['content_moderation_states']['del']['delete_states'] = array(
-    '#type' => 'checkboxes',
-    '#title' => 'Delete existing states',
-    '#default_value' => array(),
-    '#options' => _content_moderation_workflow_ui_admin_states(),
-    '#description' => 'Select all states you want to delete <br/> Please note: when deleting an existing state all transitions involving this state will also be deleted.'
-  );
-  $form['content_moderation_states']['del']['submit_states'] = array(
+
+  $states = content_moderation_states_get();
+  foreach ($states as $state => $state_descr) {
+
+    $form['content_moderation_states']['delete']['states'][$state] = array(
+      '#type' => 'checkbox',
+      '#title' => $state_descr,
+      '#default_value' => FALSE,
+   );
+   // Live and none states can not be deleted
+    if ($state == _content_moderation_live_state() || $state == _content_moderation_none_state()) {
+      $form['content_moderation_states']['delete']['states'][$state]['#disabled'] = TRUE;
+      $form['content_moderation_states']['delete']['states'][$state]['#title'] .= t(' (This state can not be delete.)');
+    }
+  }
+
+  $form['content_moderation_states']['delete']['submit_states'] = array(
     '#type' => 'submit',
     '#value' => t('Delete')
   );
@@ -99,14 +112,14 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
     '#type' => 'select',
     '#title' => 'New transition from',
     '#default_value' => array(),
-    '#options' => array_merge(array(0 => t('Choose a state')), _content_moderation_workflow_ui_admin_states()),
+    '#options' => array_merge(array(0 => t('Choose a state')), content_moderation_states_get()),
   );
 
   $form['content_moderation_transitions']['new']['new_transition_to'] = array(
     '#type' => 'select',
     '#title' => 'to',
     '#default_value' => array(),
-    '#options' => array_merge(array(0 => t('Choose a state')), _content_moderation_workflow_ui_admin_states()),
+    '#options' => array_merge(array(0 => t('Choose a state')), content_moderation_states_get()),
   );
 
   $form['content_moderation_transitions']['new']['submit_transitions'] = array(
@@ -134,18 +147,6 @@ function content_moderation_workflow_ui_admin_settings_transitions($form, &$form
   return $form;
 }
 
-/**
- * Get all states possible
- */
-function _content_moderation_workflow_ui_admin_states() {
-  $results = db_query("SELECT * FROM {content_moderation_states}");
-  //TODO: cache this
-  $states = array();
-  foreach ($results as $state) {
-    $states[$state->name] = $state->descr ? $state->descr : $state->name;
-  }
-  return $states;
-}
 
 /*
  * Get all transitions possible
@@ -163,16 +164,18 @@ function _content_moderation_workflow_ui_admin_transitions() {
 
 function content_moderation_workflow_ui_admin_settings_states_submit($form, &$form_state) {
   $form_values = $form_state['values'];
-  foreach ( $form_values['delete_states'] as $state => $action ) {
-    // @TODO nodes that are in these moderated states need to be updated
-    if ( is_string($action) ) {
+  foreach ($form_state['values']['delete']['states'] as $state => $action ) {
+    // @TODO nodes that are in these moderated states need to be updated to the
+    //       previous state? Need to figure this one out- probably can just be
+    //       handled by an alert to the user
+    if ($action) {
       // Remove the moderation state
       db_query("DELETE FROM {content_moderation_states} WHERE name = :name", array(':name' => $state));
       // Remove this state from transitions
       db_query("DELETE FROM {content_moderation_transition} WHERE from_name = :name OR to_name = :name", array(':name' => $state));
     }
   }
-  if ( isset($form_values['new_state_name']) && drupal_strlen($form_values['new_state_name']) > 0 ) {
+  if (isset($form_values['new_state_name']) && drupal_strlen($form_values['new_state_name']) > 0 ) {
     $new_state = (object) NULL;
     $new_state->name = $form_values['new_state_name'];
     if ( isset($form_values['new_state_desc']) && drupal_strlen($form_values['new_state_desc']) > 0 ) {
