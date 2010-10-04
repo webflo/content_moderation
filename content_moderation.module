@@ -15,6 +15,11 @@
  * @TODO for the most part this module is now assuming a more linear editing
  *       workflow. This may need to be rethought down the road.
  *
+ * @TODO support revision deletion
+ *
+ * @TODO on node/11/moderation_history "view" and node/11/revisions/147/view
+ *       should display moderation information
+ *
  */
 
 require_once drupal_get_path('module', 'content_moderation') . '/content_moderation.trigger.inc';

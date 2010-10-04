@@ -36,7 +36,6 @@ function content_moderation_node_current_view($node) {
 }
 
 
-
 /**
  * Display a node's moderation history
  */
@@ -64,19 +63,20 @@ function content_moderation_node_history_view($node) {
       $row = array();
       $operations = array();
       extract((array) $revision);
-      $text = '';
+      $text = l(t('view'), 'node/' . $node->nid . '/revisions/' . $vid . '/view') . ' | ' .
+        l(t('revert'), 'node/' . $node->nid . '/revisions/' . $vid . '/revert') ;
       $class = '';
       // Is this the live node?
       if ($vid == $node->content_moderation['live']->vid) {
-        $text = t('Live revision');
+       $text =  t('Live revision');
         $class = 'revision-current';
       }
       if ($vid == $node->content_moderation['current']->vid) {
-         $text =  t('Current revision');
+        $text = t('Revision in moderation');
         $class = 'revision-current';
       }
    
-      $state_change = t('From !state to !to_state', array('!state' => $old_state_name, '!to_state' => $state_name));
+      $state_change = t('From !state --> !to_state', array('!state' => $old_state_name, '!to_state' => $state_name));
 
       $row = array('data' => array(
         array('data' => $state_change, 'class' => $class),
