@@ -14,14 +14,14 @@
  */
 function content_moderation_workflow_ui_menu() {
   $items = array();
-  $items['admin/config/content_moderation/states'] = array(
+  $items['admin/config/content/content_moderation/general/states'] = array(
     'title' => 'States',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('content_moderation_workflow_ui_admin_settings_states'),
     'access arguments' => array('administer site configuration'),
   );
-  $items['admin/config/content_moderation/transitions'] = array(
+  $items['admin/config/content/content_moderation/general/transitions'] = array(
     'title' => 'Transitions',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
