@@ -14,6 +14,16 @@ function content_moderation_rules_event_info() {
       'module' => 'Content_moderation',
       'arguments' => array(
         'node' => array('type' => 'node', 'label' => t('Node on which the transition was done'))
+        'author' => array(
+                          'type' => 'user',
+                          'label' => t('Author of the node'),
+                          'handler' => 'rules_events_argument_node_author',
+			  ),
+        'user' => array(
+			'type' => 'user',
+			'label' => t('The current user'),
+			'handler' => 'rules_events_global_user_argument',
+			),
       ));
   }
 
