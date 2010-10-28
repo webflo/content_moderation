@@ -655,6 +655,11 @@ function _content_moderation_node_transition_matrix() {
       $to_states = _content_moderation_next_states($from_state,$type);
         // Values are translated.
       $to_states = array_keys($to_states);
+      foreach($to_states as $to_state) {
+        $node_state_matrix["{$type}_{$from_state}_{$to_state}"] =
+          t("State of node type @type changed from '@from_state' to '@to_state'",
+	    array('@type' => $type, '@from_state' => $from_state, '@to_state' => $to_state));
+      }
     }
   }
   
